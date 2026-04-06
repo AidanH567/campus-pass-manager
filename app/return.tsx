@@ -2,6 +2,7 @@ import { View, Text, TextInput, Pressable, StyleSheet } from "react-native";
 import { useState } from "react";
 import FormInput from "@/components/FormInput";
 import AppButton from "@/components/AppButton";
+import { router } from "expo-router";
 
 export default function ReturnScreen() {
     const [passNumber, setPassNumber] = useState("");
@@ -43,6 +44,12 @@ export default function ReturnScreen() {
 
             <AppButton title="Confirm Return" onPress={handleReturn} />
 
+            <AppButton
+            title="Back to Home"
+            onPress={() => router.back()}
+            style={styles.secondaryButton}
+            />
+
         </View>
     );
 }
@@ -69,5 +76,9 @@ const styles = StyleSheet.create({
         color: "green",
         textAlign: "center",
         fontSize: 14,
+    },
+    secondaryButton: {
+        width: "100%",
+        backgroundColor: "#666",
     },
 });
