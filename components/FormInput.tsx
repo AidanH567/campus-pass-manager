@@ -1,22 +1,21 @@
-import { TextInput, StyleSheet } from "react-native";
+import { TextInput, StyleSheet, TextInputProps } from "react-native";
 
-type FormInputProps = {
-    placeholder: string;
+type FormInputProps = TextInputProps & {
     value: string;
     onChangeText: (text: string) => void;
 };
 
 export default function FormInput({
-    placeholder,
     value,
     onChangeText,
+    ...rest
 }: FormInputProps) {
     return (
         <TextInput
             style={styles.input}
-            placeholder={placeholder}
             value={value}
             onChangeText={onChangeText}
+            {...rest}
         />
     );
 } 

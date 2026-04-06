@@ -2,18 +2,34 @@ import { View, Text, TextInput, Pressable, StyleSheet } from "react-native";
 import { useState } from "react";
 import AppButton from "@/components/AppButton";
 import FormInput from "@/components/FormInput";
+import { router } from "expo-router";
 
 export default function BorrowScreen() {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [passNumber, setPassNumber] = useState("");
+    const [error, setError] = useState("");
+    const [successMessage, setSuccessMessage] = useState("");
 
     function handleBorrow() {
+        setError("");
+        setSuccessMessage("");
+
+        if (!name.trim() || !email.trim() || !passNumber.trim()) {
+            setError("Please fill in all fields.");
+            return;
+        }
+
         console.log({
             name,
             email,
-            passNumber
-        })
+            passNumber,
+        });
+
+        setName("");
+        setEmail("");
+        setPassNumber("");
+        setSuccessMessage("You have successfully borrowed a pass");
     }
 
     return (
@@ -30,6 +46,8 @@ export default function BorrowScreen() {
                 placeholder="Enter your email"
                 value={email}
                 onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
             />
 
             <FormInput
@@ -38,7 +56,18 @@ export default function BorrowScreen() {
                 onChangeText={setPassNumber}
             />
 
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+            {successMessage ? (
+                <Text style={styles.successText}>{successMessage}</Text>
+            ) : null}
+
             <AppButton title="Confirm Borrow" onPress={handleBorrow} />
+
+            <AppButton
+                title="Back to Home"
+                onPress={() => router.back()}
+                style={styles.secondaryButton}
+            />
 
         </View>
     )
@@ -58,11 +87,18 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         textAlign: "center",
     },
-    input: {
-        borderWidth: 1,
-        borderColor: "#bbb",
-        borderRadius: 10,
-        padding: 14,
-        fontSize: 16,
+    errorText: {
+        color: "red",
+        textAlign: "center",
+        fontSize: 14,
+    },
+    successText: {
+        color: "green",
+        textAlign: "center",
+        fontSize: 14,
+    },
+    secondaryButton: {
+        width: "100%",
+        backgroundColor: "#666",
     },
 });

@@ -1,13 +1,15 @@
-import { Pressable, Text, StyleSheet } from "react-native";
+import { Pressable, Text, StyleSheet, ViewStyle } from "react-native";
 
 type AppButtonProps = {
     title: string;
     onPress: () => void;
+    style?: ViewStyle;
 }
 
-export default function AppButton({ title, onPress }: AppButtonProps) {
+export default function AppButton({title, onPress, style,
+    }: AppButtonProps) {
     return (
-        <Pressable style={styles.button} onPress={onPress}>
+        <Pressable style={[styles.button, style]} onPress={onPress}>
             <Text style={styles.buttonText}>{title}</Text>
         </Pressable>
     );
@@ -20,7 +22,7 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         alignItems: "center",
         width: 220,
-        
+
     },
     buttonText: {
         color: "white",
