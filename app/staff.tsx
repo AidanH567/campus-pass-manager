@@ -1,56 +1,23 @@
 import { View, Text, StyleSheet } from "react-native";
 import { router } from "expo-router";
 import AppButton from "../components/AppButton";
+import { usePassContext } from "@/context/PassContext";
 
-type PassRecord = {
-    id: string;
-    studentName: string;
-    email: string;
-    passNumber: string;
-    checkedOutAt: string;
-    returnedAt?: string;
-    status: "borrowed" | "returned" | "overdue";
-}
 
-const mockPassRecords: PassRecord[] = [
-    {
-        id: "1",
-        studentName: "Aidan",
-        email: "aidan@example.com",
-        passNumber: "3",
-        checkedOutAt: "09:05",
-        status: "borrowed",
-    },
-    {
-        id: "2",
-        studentName: "Mia",
-        email: "mia@example.com",
-        passNumber: "7",
-        checkedOutAt: "10:15",
-        returnedAt: "14:40",
-        status: "returned",
-    },
-    {
-        id: "3",
-        studentName: "Sam",
-        email: "sam@example.com",
-        passNumber: "2",
-        checkedOutAt: "08:50",
-        status: "overdue",
-    },
-];
 
 export default function StaffScreen() {
 
-    const borrowedPasses = mockPassRecords.filter(
+    const { passRecords } = usePassContext();
+
+    const borrowedPasses = passRecords.filter(
         (record) => record.status === "borrowed"
     )
 
-    const returnedPasses = mockPassRecords.filter(
+    const returnedPasses = passRecords.filter(
         (record) => record.status === "returned"
     );
 
-    const overduePasses = mockPassRecords.filter(
+    const overduePasses = passRecords.filter(
         (record) => record.status === "overdue"
     );
 
@@ -72,7 +39,7 @@ export default function StaffScreen() {
                             </Text>
 
                             <Text style={styles.cardSubtext}>
-                                Borrowed at {record.checkedOutAt}
+                                Borrowed at {record.borrowedAt}
                             </Text>
 
                         </View>
@@ -109,7 +76,7 @@ export default function StaffScreen() {
                                 {record.studentName} — Pass {record.passNumber}
                             </Text>
                             <Text style={styles.cardSubtext}>
-                                Checked out at {record.checkedOutAt}
+                                Checked out at {record.returnedAt}
                             </Text>
                         </View>
                     ))

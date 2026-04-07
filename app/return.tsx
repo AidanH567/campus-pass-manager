@@ -10,7 +10,7 @@ export default function ReturnScreen() {
     const [error, setError] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
 
-    const {borrowPass, passRecords } = usePassContext();
+    const { returnPass } = usePassContext();
 
     function handleReturn() {
         setError("");
@@ -21,9 +21,12 @@ export default function ReturnScreen() {
             return;
         }
 
-        console.log({
-            passNumber,
-        });
+        const didReturn = returnPass(passNumber.trim());
+
+        if (!didReturn) {
+            setError("No matching borrowed pass found with that number.")
+            return;
+        }
 
         setSuccessMessage("Pass returned successfully")
         setPassNumber("")
