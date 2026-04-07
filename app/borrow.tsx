@@ -65,7 +65,7 @@ export default function BorrowScreen() {
 
             <AppButton
                 title="Back to Home"
-                onPress={() => router.back()}
+                onPress={() => router.replace("/")}
                 style={styles.secondaryButton}
             />
 

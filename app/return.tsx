@@ -46,7 +46,7 @@ export default function ReturnScreen() {
 
             <AppButton
             title="Back to Home"
-            onPress={() => router.back()}
+            onPress={() => router.replace("/")}
             style={styles.secondaryButton}
             />
 
