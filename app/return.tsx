@@ -3,11 +3,14 @@ import { useState } from "react";
 import FormInput from "@/components/FormInput";
 import AppButton from "@/components/AppButton";
 import { router } from "expo-router";
+import { usePassContext } from "@/context/PassContext";
 
 export default function ReturnScreen() {
     const [passNumber, setPassNumber] = useState("");
     const [error, setError] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
+
+    const {borrowPass, passRecords } = usePassContext();
 
     function handleReturn() {
         setError("");

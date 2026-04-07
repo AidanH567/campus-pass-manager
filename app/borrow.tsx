@@ -3,6 +3,7 @@ import { useState } from "react";
 import AppButton from "@/components/AppButton";
 import FormInput from "@/components/FormInput";
 import { router } from "expo-router";
+import { usePassContext } from "@/context/PassContext";
 
 export default function BorrowScreen() {
     const [name, setName] = useState("");
@@ -10,6 +11,9 @@ export default function BorrowScreen() {
     const [passNumber, setPassNumber] = useState("");
     const [error, setError] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
+
+    const {borrowPass, passRecords } = usePassContext();
+    
 
     function handleBorrow() {
         setError("");
@@ -20,11 +24,17 @@ export default function BorrowScreen() {
             return;
         }
 
-        console.log({
-            name,
-            email,
-            passNumber,
-        });
+        const passAlreadyBorrowed = passRecords.some(
+            (record) =>
+                record.passNumber === passNumber.trim() && record.status === "borrowed"
+        )
+
+        if (passAlreadyBorrowed) {
+      setError("That pass is already checked out.");
+      return;
+    }
+
+        borrowPass(name.trim(), email.trim(), passNumber.trim());
 
         setName("");
         setEmail("");
