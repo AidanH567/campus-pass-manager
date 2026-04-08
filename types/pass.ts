@@ -3,6 +3,7 @@ export type PassRecord = {
   studentName: string;
   email: string;
   passNumber: string;
+  borrowedDate: string;
   borrowedAt: string;
   returnedAt?: string;
   status: "borrowed" | "returned" | "overdue";

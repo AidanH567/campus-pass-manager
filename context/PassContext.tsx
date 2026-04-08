@@ -7,6 +7,7 @@ type PassContextType = {
   borrowPass: (studentName: string, email: string, passNumber: string) => void;
   returnPass: (passNumber: string) => boolean;
   markPassOverdue: (passNumber: string) => boolean;
+  checkforOverduePasses: () => void;
 };
 
 const PassContext = createContext<PassContextType | undefined>(undefined);
@@ -16,6 +17,10 @@ function getCurrentTime() {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function getCurrentDate() {
+  return new Date().toLocaleDateString();
 }
 
 export function PassProvider({ children }: { children: ReactNode }) {
@@ -28,6 +33,7 @@ export function PassProvider({ children }: { children: ReactNode }) {
       email,
       passNumber,
       borrowedAt: getCurrentTime(),
+      borrowedDate: getCurrentDate(),
       status: "borrowed",
     };
 
@@ -59,10 +65,10 @@ export function PassProvider({ children }: { children: ReactNode }) {
   function markPassOverdue(passNumber: string) {
     let foundMatch = false;
 
-    setPassRecords((currentRecords) => 
+    setPassRecords((currentRecords) =>
       currentRecords.map((record) => {
         if (record.passNumber === passNumber && record.status === "borrowed") {
-            foundMatch = true;
+          foundMatch = true;
           return {
             ...record,
             status: "overdue",
@@ -75,11 +81,37 @@ export function PassProvider({ children }: { children: ReactNode }) {
     return foundMatch;
   }
 
-  return (
-    <PassContext.Provider value={{ passRecords, borrowPass, returnPass, markPassOverdue }}>
-      {children}
-    </PassContext.Provider>
-  );
+  function checkforOverduePasses() {
+    const now = new Date();
+    const today = getCurrentDate();
+
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+
+    const isAfterCutoff =
+      currentHour > 22 || (currentHour === 22 && currentMinute >= 43);
+
+    setPassRecords((currentRecords) =>
+      currentRecords.map((record) => {
+        if (record.status === "borrowed" &&
+          record.borrowedDate === today &&
+          isAfterCutoff) {
+          return {
+            ...record,
+            status: "overdue",
+          };
+        }
+
+        return record
+      })
+    );
+}
+
+return (
+  <PassContext.Provider value={{ passRecords, borrowPass, returnPass, markPassOverdue, checkforOverduePasses }}>
+    {children}
+  </PassContext.Provider>
+);
 }
 
 export function usePassContext() {
