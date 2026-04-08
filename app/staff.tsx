@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Pressable } from "react-native";
 import { router } from "expo-router";
 import AppButton from "../components/AppButton";
 import { usePassContext } from "@/context/PassContext";
@@ -7,7 +7,7 @@ import { usePassContext } from "@/context/PassContext";
 
 export default function StaffScreen() {
 
-    const { passRecords } = usePassContext();
+    const { passRecords, markPassOverdue } = usePassContext();
 
     const borrowedPasses = passRecords.filter(
         (record) => record.status === "borrowed"
@@ -28,7 +28,7 @@ export default function StaffScreen() {
             <Text style={styles.subtitle}></Text>
 
             <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Currently Borrowed</Text>
+                <Text style={styles.sectionTitle}>Currently Borrowed ({borrowedPasses.length})</Text>
                 {borrowedPasses.length === 0 ? (
                     <Text style={styles.placeholderText}>No borrowed passes yet.</Text>
                 ) : (
@@ -42,13 +42,17 @@ export default function StaffScreen() {
                                 Borrowed at {record.borrowedAt}
                             </Text>
 
+                            <Pressable onPress={() => markPassOverdue(record.passNumber)}>
+                                <Text style={styles.cardSubtext}>Mark Overdue</Text>
+                            </Pressable>
+
                         </View>
                     ))
                 )}
             </View>
 
             <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Returned Today</Text>
+                <Text style={styles.sectionTitle}>Returned Today ({returnedPasses.length})</Text>
                 {returnedPasses.length === 0 ? (
                     <Text style={styles.placeholderText}>No returned passes.</Text>
                 ) : (
@@ -66,7 +70,7 @@ export default function StaffScreen() {
             </View>
 
             <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Overdue Passes</Text>
+                <Text style={styles.sectionTitle}>Overdue Passes ({overduePasses.length})</Text>
                 {overduePasses.length === 0 ? (
                     <Text style={styles.placeholderText}>No overdue passes.</Text>
                 ) : (
@@ -78,6 +82,7 @@ export default function StaffScreen() {
                             <Text style={styles.cardSubtext}>
                                 Checked out at {record.returnedAt}
                             </Text>
+                            
                         </View>
                     ))
                 )}

@@ -6,6 +6,7 @@ type PassContextType = {
   passRecords: PassRecord[];
   borrowPass: (studentName: string, email: string, passNumber: string) => void;
   returnPass: (passNumber: string) => boolean;
+  markPassOverdue: (passNumber: string) => boolean;
 };
 
 const PassContext = createContext<PassContextType | undefined>(undefined);
@@ -55,8 +56,27 @@ export function PassProvider({ children }: { children: ReactNode }) {
     return foundMatch;
   }
 
+  function markPassOverdue(passNumber: string) {
+    let foundMatch = false;
+
+    setPassRecords((currentRecords) => 
+      currentRecords.map((record) => {
+        if (record.passNumber === passNumber && record.status === "borrowed") {
+            foundMatch = true;
+          return {
+            ...record,
+            status: "overdue",
+          };
+        }
+
+        return record
+      })
+    )
+    return foundMatch;
+  }
+
   return (
-    <PassContext.Provider value={{ passRecords, borrowPass, returnPass }}>
+    <PassContext.Provider value={{ passRecords, borrowPass, returnPass, markPassOverdue }}>
       {children}
     </PassContext.Provider>
   );
