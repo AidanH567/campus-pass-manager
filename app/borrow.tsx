@@ -20,7 +20,7 @@ export default function BorrowScreen() {
         setSuccessMessage("");
 
         if (!name.trim() || !email.trim() || !passNumber.trim()) {
-            setError("Please fill in all fields.");
+            setError("Please fill in all fields!.");
             return;
         }
 
