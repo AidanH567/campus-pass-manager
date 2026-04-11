@@ -1,13 +1,18 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
+import type { ReactNode } from "react";
 import { PassRecord } from "@/types/pass";
+import {
+  fetchPassRecordsFromDb, markPassOverdueInDb,
+  markPassReturnedInDb, createPassRecordInDb
+} from "@/lib/passRecordsApi";
 
 
 type PassContextType = {
   passRecords: PassRecord[];
-  borrowPass: (studentName: string, email: string, passNumber: string) => void;
-  returnPass: (passNumber: string) => boolean;
-  markPassOverdue: (passNumber: string) => boolean;
-  checkforOverduePasses: () => void;
+  borrowPass: (studentName: string, email: string, passNumber: string) => Promise<void>;
+  returnPass: (passNumber: string) => Promise<boolean>;
+  markPassOverdue: (passNumber: string) => Promise<boolean>;
+  checkForOverduePasses: () => Promise<void>;
 };
 
 const PassContext = createContext<PassContextType | undefined>(undefined);
@@ -26,62 +31,147 @@ function getCurrentDate() {
 export function PassProvider({ children }: { children: ReactNode }) {
   const [passRecords, setPassRecords] = useState<PassRecord[]>([]);
 
-  function borrowPass(studentName: string, email: string, passNumber: string) {
-    const newRecord: PassRecord = {
-      id: Date.now().toString(),
-      studentName,
-      email,
-      passNumber,
-      borrowedAt: getCurrentTime(),
-      borrowedDate: getCurrentDate(),
-      status: "borrowed",
-    };
+  useEffect(() => {
+    fetchPassRecords();
+  }, []);
 
-    setPassRecords((currentRecords) => [newRecord, ...currentRecords]);
+  async function fetchPassRecords() {
+    const { data, error } = await fetchPassRecordsFromDb();
+
+    if (error) {
+      console.error("Error fetch pass records: ", error)
+      return;
+    }
+
+    const mappedRecords: PassRecord[] = (data || []).map((record) => ({
+      id: record.id,
+      studentName: record.student_name,
+      email: record.email,
+      passNumber: record.pass_number,
+      borrowedAt: record.borrowed_at,
+      borrowedDate: record.borrowed_date,
+      returnedAt: record.returned_at,
+      status: record.status,
+    }));
+
+    setPassRecords(mappedRecords);
+
   }
 
-  function returnPass(passNumber: string) {
-    let foundMatch = false;
+  async function borrowPass(studentName: string, email: string, passNumber: string) {
+    const { error } = await createPassRecordInDb({
+      student_name: studentName,
+      email,
+      pass_number: passNumber,
+      borrowed_at: getCurrentTime(),
+      borrowed_date: getCurrentDate(),
+      status: "borrowed",
+    });
 
-    setPassRecords((currentRecords) =>
-      currentRecords.map((record) => {
-        if (record.passNumber === passNumber && record.status === "borrowed") {
-          foundMatch = true;
+    if (error) {
+      console.error("Error creating pass record:", error);
+      return;
+    }
 
-          return {
-            ...record,
-            returnedAt: getCurrentTime(),
-            status: "returned",
-          };
-        }
+    await fetchPassRecords();
+  }
 
-        return record;
-      })
+  // function returnPass(passNumber: string) {
+  //   let foundMatch = false;
+
+  //   setPassRecords((currentRecords) =>
+  //     currentRecords.map((record) => {
+  //       if (record.passNumber === passNumber && record.status === "borrowed") {
+  //         foundMatch = true;
+
+  //         return {
+  //           ...record,
+  //           returnedAt: getCurrentTime(),
+  //           status: "returned",
+  //         };
+  //       }
+
+  //       return record;
+  //     })
+  //   );
+
+  //   return foundMatch;
+  // }
+
+  async function returnPass(passNumber: string) {
+    const { data, error } = await markPassReturnedInDb(
+      passNumber,
+      getCurrentTime()
     );
 
-    return foundMatch;
+    if (error) {
+      console.error("Error returning pass:", error);
+      return false;
+    }
+
+    await fetchPassRecords();
+
+    return !!data && data.length > 0;
   }
 
-  function markPassOverdue(passNumber: string) {
-    let foundMatch = false;
+  // function markPassOverdue(passNumber: string) {
+  //   let foundMatch = false;
 
-    setPassRecords((currentRecords) =>
-      currentRecords.map((record) => {
-        if (record.passNumber === passNumber && record.status === "borrowed") {
-          foundMatch = true;
-          return {
-            ...record,
-            status: "overdue",
-          };
-        }
+  //   setPassRecords((currentRecords) =>
+  //     currentRecords.map((record) => {
+  //       if (record.passNumber === passNumber && record.status === "borrowed") {
+  //         foundMatch = true;
+  //         return {
+  //           ...record,
+  //           status: "overdue",
+  //         };
+  //       }
 
-        return record
-      })
-    )
-    return foundMatch;
+  //       return record
+  //     })
+  //   )
+  //   return foundMatch;
+  // }
+  async function markPassOverdue(passNumber: string) {
+    const { data, error } = await markPassOverdueInDb(passNumber);
+
+    if (error) {
+      console.error("Error marking pass overdue:", error);
+      return false;
+    }
+
+    await fetchPassRecords();
+
+    return !!data && data.length > 0;
   }
 
-  function checkforOverduePasses() {
+  // function checkForOverduePasses() {
+  //   const now = new Date();
+  //   const today = getCurrentDate();
+
+  //   const currentHour = now.getHours();
+  //   const currentMinute = now.getMinutes();
+
+  //   const isAfterCutoff =
+  //     currentHour > 22 || (currentHour === 22 && currentMinute >= 43);
+
+  //   setPassRecords((currentRecords) =>
+  //     currentRecords.map((record) => {
+  //       if (record.status === "borrowed" &&
+  //         record.borrowedDate === today &&
+  //         isAfterCutoff) {
+  //         return {
+  //           ...record,
+  //           status: "overdue",
+  //         };
+  //       }
+
+  //       return record
+  //     })
+  //   );
+  // }
+
+  async function checkForOverduePasses() {
     const now = new Date();
     const today = getCurrentDate();
 
@@ -89,29 +179,34 @@ export function PassProvider({ children }: { children: ReactNode }) {
     const currentMinute = now.getMinutes();
 
     const isAfterCutoff =
-      currentHour > 22 || (currentHour === 22 && currentMinute >= 43);
+      currentHour > 18 || (currentHour === 18 && currentMinute >= 30);
 
-    setPassRecords((currentRecords) =>
-      currentRecords.map((record) => {
-        if (record.status === "borrowed" &&
-          record.borrowedDate === today &&
-          isAfterCutoff) {
-          return {
-            ...record,
-            status: "overdue",
-          };
-        }
+    if (!isAfterCutoff) return;
 
-        return record
-      })
+    const overdueCandidates = passRecords.filter(
+      (record) =>
+        record.status === "borrowed" &&
+        record.borrowedDate === today
     );
-}
 
-return (
-  <PassContext.Provider value={{ passRecords, borrowPass, returnPass, markPassOverdue, checkforOverduePasses }}>
-    {children}
-  </PassContext.Provider>
-);
+    if (overdueCandidates.length === 0) return;
+
+    for (const record of overdueCandidates) {
+      const { error } = await markPassOverdueInDb(record.passNumber);
+
+      if (error) {
+        console.error("Error marking overdue:", error);
+      }
+    }
+
+    await fetchPassRecords();
+  }
+
+  return (
+    <PassContext.Provider value={{ passRecords, borrowPass, returnPass, markPassOverdue, checkForOverduePasses }}>
+      {children}
+    </PassContext.Provider>
+  );
 }
 
 export function usePassContext() {
