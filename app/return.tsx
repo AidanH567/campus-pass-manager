@@ -1,4 +1,4 @@
-import { View, Text, TextInput, Pressable, StyleSheet } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import { useState } from "react";
 import FormInput from "@/components/FormInput";
 import AppButton from "@/components/AppButton";
@@ -12,7 +12,7 @@ export default function ReturnScreen() {
 
     const { returnPass } = usePassContext();
 
-    function handleReturn() {
+    async function handleReturn() {
         setError("");
         setSuccessMessage("");
 
@@ -21,7 +21,7 @@ export default function ReturnScreen() {
             return;
         }
 
-        const didReturn = returnPass(passNumber.trim());
+        const didReturn = await returnPass(passNumber.trim());
 
         if (!didReturn) {
             setError("No matching borrowed pass found with that number.")

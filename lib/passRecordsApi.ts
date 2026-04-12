@@ -47,3 +47,13 @@ export async function markPassOverdueInDb(passNumber: string) {
     .eq("status", "borrowed")
     .select();
 }
+
+export async function findLatestPassRecordByEmail(email: string) {
+  return await supabase
+    .from("pass_records")
+    .select("*")
+    .eq("email", email)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .single();
+}

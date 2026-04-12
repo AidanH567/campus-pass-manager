@@ -15,7 +15,7 @@ export default function BorrowScreen() {
     const {borrowPass, passRecords } = usePassContext();
     
 
-    function handleBorrow() {
+    async function handleBorrow() {
         setError("");
         setSuccessMessage("");
 
@@ -34,7 +34,7 @@ export default function BorrowScreen() {
       return;
     }
 
-        borrowPass(name.trim(), email.trim(), passNumber.trim());
+        await borrowPass(name.trim(), email.trim(), passNumber.trim());
 
         setName("");
         setEmail("");

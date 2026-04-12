@@ -11,7 +11,7 @@ export default function HomeScreen() {
 
             <AppButton
                 title="Borrow Pass"
-                onPress={() => router.push("/borrow")}
+                onPress={() => router.push("/borrow-options")}
             />
 
             <AppButton
