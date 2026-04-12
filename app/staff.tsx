@@ -1,18 +1,19 @@
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import { router } from "expo-router";
-import AppButton from "../components/AppButton";
+import AppButton from "@/components/AppButton";
 import { usePassContext } from "@/context/PassContext";
 import { useEffect } from "react";
-
-
 
 export default function StaffScreen() {
 
     const { passRecords, markPassOverdue, checkForOverduePasses } = usePassContext();
 
     useEffect(() => {
-        checkForOverduePasses();
+        async function runOverdueCheck() {
+            await checkForOverduePasses();
+        }
 
+        runOverdueCheck();
     }, []);
 
 

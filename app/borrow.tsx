@@ -1,9 +1,10 @@
-import { View, Text, TextInput, Pressable, StyleSheet } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import { useState } from "react";
 import AppButton from "@/components/AppButton";
 import FormInput from "@/components/FormInput";
 import { router } from "expo-router";
 import { usePassContext } from "@/context/PassContext";
+import LoadingIndicator from "@/components/LoadingIndicator"
 
 export default function BorrowScreen() {
     const [name, setName] = useState("");
@@ -11,35 +12,42 @@ export default function BorrowScreen() {
     const [passNumber, setPassNumber] = useState("");
     const [error, setError] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const {borrowPass, passRecords } = usePassContext();
-    
+    const { borrowPass, passRecords } = usePassContext();
+
 
     async function handleBorrow() {
         setError("");
         setSuccessMessage("");
+        setIsSubmitting(true);
 
-        if (!name.trim() || !email.trim() || !passNumber.trim()) {
-            setError("Please fill in all fields!.");
-            return;
+        try {
+            if (!name.trim() || !email.trim() || !passNumber.trim()) {
+                setError("Please fill in all fields.");
+                return;
+            }
+
+            const passAlreadyBorrowed = passRecords.some(
+                (record) =>
+                    record.passNumber === passNumber.trim() &&
+                    record.status === "borrowed"
+            );
+
+            if (passAlreadyBorrowed) {
+                setError("That pass is already checked out.");
+                return;
+            }
+
+            await borrowPass(name.trim(), email.trim(), passNumber.trim());
+
+            setName("");
+            setEmail("");
+            setPassNumber("");
+            setSuccessMessage("You have successfully borrowed a pass.");
+        } finally {
+            setIsSubmitting(false);
         }
-
-        const passAlreadyBorrowed = passRecords.some(
-            (record) =>
-                record.passNumber === passNumber.trim() && record.status === "borrowed"
-        )
-
-        if (passAlreadyBorrowed) {
-      setError("That pass is already checked out.");
-      return;
-    }
-
-        await borrowPass(name.trim(), email.trim(), passNumber.trim());
-
-        setName("");
-        setEmail("");
-        setPassNumber("");
-        setSuccessMessage("You have successfully borrowed a pass");
     }
 
     return (
@@ -66,16 +74,31 @@ export default function BorrowScreen() {
                 onChangeText={setPassNumber}
             />
 
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
-            {successMessage ? (
+            {isSubmitting ? (
+                <LoadingIndicator message="Borrowing pass..." />
+            ) : error ? (
+                <Text style={styles.errorText}>{error}</Text>
+            ) : successMessage ? (
                 <Text style={styles.successText}>{successMessage}</Text>
             ) : null}
 
-            <AppButton title="Confirm Borrow" onPress={handleBorrow} />
+            <AppButton
+                title={isSubmitting ? "Borrowing..." : "Confirm Borrow"}
+                onPress={handleBorrow}
+                disabled={isSubmitting}
+            />
 
             <AppButton
-                title="Back to Home"
+                title="Back to home"
+                disabled={isSubmitting}
                 onPress={() => router.replace("/")}
+                style={styles.secondaryButton}
+            />
+
+            <AppButton
+                disabled={isSubmitting}
+                title="Back"
+                onPress={() => router.replace("/borrow-options")}
                 style={styles.secondaryButton}
             />
 

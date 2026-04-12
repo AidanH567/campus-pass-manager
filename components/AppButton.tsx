@@ -4,12 +4,13 @@ type AppButtonProps = {
     title: string;
     onPress: () => void;
     style?: ViewStyle;
+    disabled?: boolean;
 }
 
-export default function AppButton({title, onPress, style,
+export default function AppButton({title, onPress, style, disabled = false
     }: AppButtonProps) {
     return (
-        <Pressable style={[styles.button, style]} onPress={onPress}>
+        <Pressable style={[styles.button, style]} onPress={onPress} disabled={disabled}>
             <Text style={styles.buttonText}>{title}</Text>
         </Pressable>
     );
