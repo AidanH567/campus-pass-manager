@@ -140,7 +140,7 @@ export function PassProvider({ children }: { children: ReactNode }) {
     const currentMinute = now.getMinutes();
 
     const isAfterCutoff =
-      currentHour > 10 || (currentHour === 10 && currentMinute >= 34);
+      currentHour > 12 || (currentHour === 12 && currentMinute >= 34);
 
     if (!isAfterCutoff) return;
 
