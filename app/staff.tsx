@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import { View, Text, StyleSheet, Pressable, ScrollView } from "react-native";
 import { router } from "expo-router";
 import AppButton from "@/components/AppButton";
 import { usePassContext } from "@/context/PassContext";
@@ -30,7 +30,7 @@ export default function StaffScreen() {
     );
 
     return (
-        <View style={styles.container}>
+        <ScrollView style={styles.container}>
 
             <Text style={styles.title}>Staff View</Text>
             <Text style={styles.subtitle}>Card Overview</Text>
@@ -102,21 +102,20 @@ export default function StaffScreen() {
                 style={styles.backButton}
             />
 
-        </View>
+        </ScrollView>
     )
 }
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
         padding: 24,
-        justifyContent: "center",
         gap: 16,
     },
     title: {
         fontSize: 28,
         fontWeight: "700",
         textAlign: "center",
+        marginTop: 20,
     },
     subtitle: {
         fontSize: 18,
@@ -158,5 +157,6 @@ const styles = StyleSheet.create({
         width: "100%",
         backgroundColor: "#666",
         marginTop: 8,
+        marginBottom: 30,
     },
 });
