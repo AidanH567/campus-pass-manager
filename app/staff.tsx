@@ -1,10 +1,22 @@
-import { View, Text, StyleSheet, Pressable } from "react-native";
-import { router } from "expo-router";
 import AppButton from "@/components/AppButton";
 import { usePassContext } from "@/context/PassContext";
+import { router } from "expo-router";
 import { useEffect } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 export default function StaffScreen() {
+
+    function formatReminderTimestamp(timestamp?: string | null) {
+        if (!timestamp) return "Not sent";
+
+        return new Date(timestamp).toLocaleString("en-GB", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+        });
+    }
 
     const { passRecords, markPassOverdue, checkForOverduePasses } = usePassContext();
 
@@ -30,7 +42,7 @@ export default function StaffScreen() {
     );
 
     return (
-        <View style={styles.container}>
+        <ScrollView contentContainerStyle={styles.container}>
 
             <Text style={styles.title}>Staff View</Text>
             <Text style={styles.subtitle}>Card Overview</Text>
@@ -91,6 +103,14 @@ export default function StaffScreen() {
                                 Borrowed at {record.borrowedAt}
                             </Text>
 
+                            <Text style={styles.cardSubtext}>
+                                First reminder: {formatReminderTimestamp(record.firstReminderSentAt)}
+                            </Text>
+
+                            <Text style={styles.cardSubtext}>
+                                Second reminder: {formatReminderTimestamp(record.secondReminderSentAt)}
+                            </Text>
+
                         </View>
                     ))
                 )}
@@ -102,7 +122,7 @@ export default function StaffScreen() {
                 style={styles.backButton}
             />
 
-        </View>
+        </ScrollView>
     )
 }
 
