@@ -1,10 +1,13 @@
-import { createContext, useContext, useState, useEffect } from "react";
-import type { ReactNode } from "react";
-import { PassRecord } from "@/types/pass";
 import {
-  fetchPassRecordsFromDb, markPassOverdueInDb,
-  markPassReturnedInDb, createPassRecordInDb, findLatestPassRecordByEmail
+  createPassRecordInDb,
+  fetchPassRecordsFromDb,
+  findLatestPassRecordByEmail,
+  markPassOverdueInDb,
+  markPassReturnedInDb
 } from "@/lib/passRecordsApi";
+import { PassRecord } from "@/types/pass";
+import type { ReactNode } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 
 type PassContextType = {
@@ -53,6 +56,8 @@ export function PassProvider({ children }: { children: ReactNode }) {
       borrowedDate: record.borrowed_date,
       returnedAt: record.returned_at,
       status: record.status,
+      firstReminderSentAt: record.first_reminder_sent_at,
+  secondReminderSentAt: record.second_reminder_sent_at,
     }));
 
     setPassRecords(mappedRecords);
@@ -140,7 +145,7 @@ export function PassProvider({ children }: { children: ReactNode }) {
     const currentMinute = now.getMinutes();
 
     const isAfterCutoff =
-      currentHour > 19 || (currentHour === 19 && currentMinute >= 32);
+      currentHour > 19 || (currentHour === 19 && currentMinute >= 10);
 
     if (!isAfterCutoff) return;
 

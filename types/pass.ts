@@ -7,4 +7,6 @@ export type PassRecord = {
   borrowedAt: string;
   returnedAt?: string;
   status: "borrowed" | "returned" | "overdue";
+  firstReminderSentAt?: string | null;
+  secondReminderSentAt?: string | null;
 };
