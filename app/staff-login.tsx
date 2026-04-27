@@ -7,6 +7,7 @@ const STAFF_PASSCODE = "7842";
 export default function StaffLoginScreen() {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
+  const [isAuithenticating, setIsAuthenticating] = useState(false);
 
   function handleNumberPress(number: string) {
     if (code.length >= 4) return;
@@ -24,6 +25,7 @@ export default function StaffLoginScreen() {
     if (code.length === 4) {
       if (code === STAFF_PASSCODE) {
         router.replace("/staff");
+        setIsAuthenticating(true);
       } else {
         setError("Incorrect passcode");
         setCode("");
