@@ -1,5 +1,4 @@
 
-import { router } from "expo-router";
 import AppButton from "@/components/AppButton";
 import { usePassContext } from "@/context/PassContext";
 import { router } from "expo-router";
