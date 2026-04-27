@@ -21,7 +21,7 @@ export default function HomeScreen() {
 
              <AppButton
                 title="Staff"
-                onPress={() => router.push("/staff-login")}
+                onPress={() => router.push("/staff-login" as any)}
             />
 
         </View>

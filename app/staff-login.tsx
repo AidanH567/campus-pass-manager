@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-const STAFF_PASSCODE = "1234";
+const STAFF_PASSCODE = "7842";
 
 export default function StaffLoginScreen() {
   const [code, setCode] = useState("");
