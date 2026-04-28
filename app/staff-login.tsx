@@ -1,11 +1,13 @@
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useStaffAuth } from "@/context/StaffAuthContext";
 
 const STAFF_PASSCODE = "7842";
 
 export default function StaffLoginScreen() {
   const [code, setCode] = useState("");
+  const { unlockStaff } = useStaffAuth();
   const [error, setError] = useState("");
   const [isAuithenticating, setIsAuthenticating] = useState(false);
 
@@ -26,6 +28,7 @@ export default function StaffLoginScreen() {
       if (code === STAFF_PASSCODE) {
         router.replace("/staff");
         setIsAuthenticating(true);
+        unlockStaff(); // Unlock staff authentication
       } else {
         setError("Incorrect passcode");
         setCode("");
