@@ -1,3 +1,4 @@
+import { useStaffAuthContext } from "@/context/StaffAuthContext";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -7,7 +8,8 @@ const STAFF_PASSCODE = "7842";
 export default function StaffLoginScreen() {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
-  const [isAuithenticating, setIsAuthenticating] = useState(false);
+
+  const { authenticateStaff } = useStaffAuthContext();
 
   function handleNumberPress(number: string) {
     if (code.length >= 4) return;
@@ -24,14 +26,14 @@ export default function StaffLoginScreen() {
   useEffect(() => {
     if (code.length === 4) {
       if (code === STAFF_PASSCODE) {
+        authenticateStaff();
         router.replace("/staff");
-        setIsAuthenticating(true);
       } else {
         setError("Incorrect passcode");
         setCode("");
       }
     }
-  }, [code]);
+  }, [authenticateStaff, code]);
 
   const keypadNumbers = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
