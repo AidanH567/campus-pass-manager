@@ -1,50 +1,118 @@
-# Welcome to your Expo app 👋
+# Campus Pass Manager
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Campus Pass Manager is a mobile-first application for managing the lifecycle of campus passes used by students and staff. The app supports borrowing, returning, and staff-side monitoring of active and overdue passes, with data persisted in Supabase.
 
-## Get started
+## Overview
 
-1. Install dependencies
+Many campuses rely on physical passes for temporary access to facilities, events, or resources. This project provides a streamlined workflow to:
 
-   ```bash
-   npm install
-   ```
+- Record when a pass is borrowed.
+- Record when a pass is returned.
+- Reuse known borrower details for faster checkout.
+- Give staff a live operational view of borrowed, returned, and overdue passes.
 
-2. Start the app
+The goal is to improve accountability, reduce manual tracking overhead, and provide a clear record of pass movement throughout the day.
 
-   ```bash
-   npx expo start
-   ```
+## Core Features
 
-In the output, you'll find options to open the app in a
+- **Borrow pass (new borrower):** Capture student name, email, and pass number.
+- **Borrow pass (returning borrower):** Look up a previous borrower by email and issue a new pass quickly.
+- **Return pass:** Mark a pass as returned by pass number.
+- **Staff dashboard:** View currently borrowed, returned, and overdue passes.
+- **Overdue handling:** Staff can manually mark records overdue, and the app includes an overdue check routine based on cutoff time.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## User Roles and Workflows
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### Students / General Users
+- Borrow a pass using the standard form.
+- Return a pass when finished.
 
-## Get a fresh project
+### Staff
+- Access the staff area through the staff login screen.
+- Monitor pass status across all records.
+- Mark borrowed passes as overdue when required.
 
-When you're ready, run:
+## Technical Architecture
+
+- **Frontend:** React Native with Expo.
+- **Routing:** `expo-router` with file-based routes.
+- **Language:** TypeScript.
+- **State Management:** React Context (`PassProvider`) for app-wide pass state and actions.
+- **Backend/Data:** Supabase (`@supabase/supabase-js`) using a `pass_records` table.
+
+### High-level Data Flow
+1. UI screens trigger actions (borrow, return, overdue updates).
+2. Context methods call API helpers in `lib/passRecordsApi.ts`.
+3. Supabase reads/writes are performed against `pass_records`.
+4. Updated records are fetched and mapped back into app state.
+
+## Project Structure
+
+- `app/` – Route-based screens (home, borrow, return, staff).
+- `context/PassContext.tsx` – Global pass state and business logic.
+- `lib/supabase.ts` – Supabase client setup.
+- `lib/passRecordsApi.ts` – Database operation helpers.
+- `types/pass.ts` – Core pass record type definitions.
+- `components/` – Reusable UI components.
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- npm 9+
+- Expo CLI runtime via project dependencies
+- A Supabase project with the required `pass_records` schema
+
+### Installation
 
 ```bash
-npm run reset-project
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### Environment Variables
 
-## Learn more
+Create an `.env` file (or equivalent Expo env configuration) with:
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+EXPO_PUBLIC_SUPABASE_URL=your_supabase_project_url
+EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_supabase_anon_or_publishable_key
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### Run the App
 
-## Join the community
+```bash
+npm run start
+```
 
-Join our community of developers creating universal apps.
+Optional platform shortcuts:
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```bash
+npm run android
+npm run ios
+npm run web
+```
+
+## Quality and Validation
+
+Run lint checks:
+
+```bash
+npm run lint
+```
+
+## Security Notes
+
+This repository currently includes a local staff passcode flow for access to the staff view. For production environments, replace client-side passcode checks with a secure server-backed authentication and authorization model.
+
+## Roadmap Ideas
+
+- Add role-based authentication for staff accounts.
+- Implement server-side scheduled overdue processing.
+- Add reminder notification delivery tracking and retry logic.
+- Add automated tests for borrow/return/overdue workflows.
+- Add analytics for pass utilization trends.
+
+## License
+
+This project is currently unlicensed. Add a license file before public distribution.
