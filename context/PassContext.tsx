@@ -113,6 +113,10 @@ export function PassProvider({ children }: { children: ReactNode }) {
   }
 
   async function borrowPass(studentName: string, email: string, passNumber: string) {
+
+    if (hasActivePassForStudent(email) || isPassCurrentlyInUse(passNumber)) {
+      return false;
+    }
     const { error } = await createPassRecordInDb({
       student_name: studentName,
       email,
@@ -124,10 +128,11 @@ export function PassProvider({ children }: { children: ReactNode }) {
 
     if (error) {
       console.error("Error creating pass record:", error);
-      return;
+      return false;
     }
 
     await fetchPassRecords();
+    return true;
   }
 
   async function returnPass(passNumber: string) {
@@ -147,17 +152,17 @@ export function PassProvider({ children }: { children: ReactNode }) {
   }
 
   async function markPassOverdue(passNumber: string) {
-    const { data, error } = await markPassOverdueInDb(passNumber);
+  const { data, error } = await markPassOverdueInDb(passNumber);
 
-    if (error) {
-      console.error("Error marking pass overdue:", error);
-      return false;
-    }
-
-    await fetchPassRecords();
-
-    return !!data && data.length > 0;
+  if (error) {
+    console.error("Error marking pass overdue:", error);
+    return false;
   }
+
+  await fetchPassRecords();
+
+  return !!data && data.length > 0;
+}
 
   async function checkForOverduePasses() {
     const now = new Date();

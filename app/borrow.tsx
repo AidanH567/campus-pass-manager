@@ -28,18 +28,45 @@ export default function BorrowScreen() {
         return;
       }
 
-      const passAlreadyBorrowed = passRecords.some(
+      const normalizedEmail = email.trim().toLowerCase();
+      const normalizedPass = passNumber.trim();
+
+      const passAlreadyInUse = passRecords.some(
         (record) =>
-          record.passNumber === passNumber.trim() &&
-          record.status === "borrowed"
+          record.passNumber === normalizedPass &&
+          (record.status === "borrowed" || record.status === "overdue")
       );
 
-      if (passAlreadyBorrowed) {
+      if (passAlreadyInUse) {
         setError("That pass is already checked out.");
         return;
       }
 
-      await borrowPass(name.trim(), email.trim(), passNumber.trim());
+      const studentHasActivePass = passRecords.some(
+        (record) =>
+          record.email.toLowerCase() === normalizedEmail &&
+          (record.status === "borrowed" || record.status === "overdue")
+      );
+
+      if (studentHasActivePass) {
+        setError(
+          "You already have an active pass. Return it before borrowing another."
+        );
+        return;
+      }
+
+      const didBorrow = await borrowPass(
+        name.trim(),
+        normalizedEmail,
+        normalizedPass
+      );
+
+      if (!didBorrow) {
+        setError(
+          "Unable to borrow pass. The pass or borrower may already have an active pass."
+        );
+        return;
+      }
 
       setName("");
       setEmail("");
