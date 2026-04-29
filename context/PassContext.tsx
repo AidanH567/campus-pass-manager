@@ -12,7 +12,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 
 type PassContextType = {
   passRecords: PassRecord[];
-  borrowPass: (studentName: string, email: string, passNumber: string) => Promise<void>;
+  borrowPass: (studentName: string, email: string, passNumber: string) => Promise<boolean>;
   returnPass: (passNumber: string) => Promise<boolean>;
   markPassOverdue: (passNumber: string) => Promise<boolean>;
   checkForOverduePasses: () => Promise<void>;
@@ -64,7 +64,29 @@ export function PassProvider({ children }: { children: ReactNode }) {
 
   }
 
+    function hasActivePassForStudent(email: string) {
+    return passRecords.some(
+      (record) =>
+        record.email.toLowerCase() === email.trim().toLowerCase() &&
+        (record.status === "borrowed" || record.status === "overdue")
+    );
+  }
+
+  function isPassCurrentlyInUse(passNumber: string) {
+    return passRecords.some(
+      (record) =>
+        record.passNumber.trim() === passNumber.trim() &&
+        (record.status === "borrowed" || record.status === "overdue")
+    );
+  }
+
+
   async function borrowPassWithExistingEmail(email: string, passNumber: string) {
+
+    if (hasActivePassForStudent(email) || isPassCurrentlyInUse(passNumber)) {
+      return false;
+    }
+    
     const { data, error } = await findLatestPassRecordByEmail(email);
 
     if (error || !data) {
