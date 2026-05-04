@@ -5,6 +5,7 @@ import FormInput from "@/components/FormInput";
 import AppButton from "@/components/AppButton";
 import { usePassContext } from "@/context/PassContext";
 import LoadingIndicator from "@/components/LoadingIndicator";
+import { COLORS } from "@/lib/theme";
 
 export default function BorrowExistingScreen() {
   const [email, setEmail] = useState("");
@@ -28,26 +29,42 @@ export default function BorrowExistingScreen() {
         return;
       }
 
-      const passAlreadyBorrowed = passRecords.some(
+      const normalizedEmail = email.trim().toLowerCase();
+      const normalizedPass = passNumber.trim();
+
+      const passAlreadyInUse = passRecords.some(
         (record) =>
-          record.passNumber === passNumber.trim() &&
-          record.status === "borrowed"
+          record.passNumber === normalizedPass &&
+          (record.status === "borrowed" || record.status === "overdue")
       );
 
-      if (passAlreadyBorrowed) {
+      if (passAlreadyInUse) {
         setError("That pass is already checked out.");
         return;
       }
 
+      const studentHasActivePass = passRecords.some(
+        (record) =>
+          record.email.toLowerCase() === normalizedEmail &&
+          (record.status === "borrowed" || record.status === "overdue")
+      );
+
+      if (studentHasActivePass) {
+        setError(
+          "You already have an active pass. Return it before borrowing another."
+        );
+        return;
+      }
+
       const didBorrow = await borrowPassWithExistingEmail(
-        email.trim(),
-        passNumber.trim()
+        normalizedEmail,
+        normalizedPass
       );
 
       if (!didBorrow) {
         setShowNewBorrowerButton(true);
         setError(
-          "No previous borrower found with that email. Please use the new borrower form."
+          "No previous borrower found with that email, or the borrower/pass already has an active checkout."
         );
         return;
       }
@@ -61,93 +78,110 @@ export default function BorrowExistingScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Borrow Pass</Text>
-      <Text style={styles.subtitle}>Returning borrower</Text>
+    <View style={styles.screen}>
+      <View style={styles.card}>
+        <Text style={styles.title}>Borrow Pass</Text>
+        <Text style={styles.subtitle}>Returning borrower</Text>
 
-      <FormInput
-        placeholder="Enter your email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-
-      <FormInput
-        placeholder="Enter pass number"
-        value={passNumber}
-        onChangeText={setPassNumber}
-      />
-
-      {isSubmitting ? (
-        <LoadingIndicator message="Borrowing pass..." />
-      ) : error ? (
-        <Text style={styles.errorText}>{error}</Text>
-      ) : successMessage ? (
-        <Text style={styles.successText}>{successMessage}</Text>
-      ) : null}
-
-      <AppButton
-        title={isSubmitting ? "Borrowing..." : "Confirm Borrow"}
-        onPress={handleBorrowExisting}
-        disabled={isSubmitting}
-      />
-
-      {showNewBorrowerButton ? (
-        <AppButton
-          title="Go to New Borrower Form"
-          onPress={() => router.push("/borrow")}
-          style={styles.secondaryButton}
-          disabled={isSubmitting}
+        <FormInput
+          placeholder="Enter your email"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
         />
-      ) : null}
 
-      <AppButton
-        title="Back"
-        onPress={() => router.replace("/borrow-options")}
-        style={styles.secondaryButton}
-        disabled={isSubmitting}
-      />
+        <FormInput
+          placeholder="Enter pass number"
+          value={passNumber}
+          onChangeText={setPassNumber}
+        />
 
-      <AppButton
-        title="Back to Home"
-        onPress={() => router.replace("/")}
-        style={styles.secondaryButton}
-        disabled={isSubmitting}
-      />
+        {isSubmitting ? (
+          <LoadingIndicator message="Borrowing pass..." />
+        ) : error ? (
+          <Text style={styles.errorText}>{error}</Text>
+        ) : successMessage ? (
+          <Text style={styles.successText}>{successMessage}</Text>
+        ) : null}
+
+        <View style={styles.buttonGroup}>
+          <AppButton
+            title={isSubmitting ? "Borrowing..." : "Confirm Borrow"}
+            onPress={handleBorrowExisting}
+            disabled={isSubmitting}
+          />
+
+          {showNewBorrowerButton ? (
+            <AppButton
+              title="Use New Borrower Form"
+              onPress={() => router.push("/borrow")}
+              disabled={isSubmitting}
+            />
+          ) : null}
+
+          <AppButton
+            title="Back"
+            onPress={() => router.replace("/borrow-options")}
+            variant="secondary"
+            disabled={isSubmitting}
+          />
+
+          <AppButton
+            title="Back to Home"
+            onPress={() => router.replace("/")}
+            variant="secondary"
+            disabled={isSubmitting}
+          />
+        </View>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
     padding: 24,
     justifyContent: "center",
-    gap: 14,
+    alignItems: "center",
+    backgroundColor: COLORS.background,
+  },
+  card: {
+    width: "100%",
+    maxWidth: 560,
+    backgroundColor: COLORS.surface,
+    borderColor: COLORS.border,
+    borderWidth: 1,
+    borderRadius: 20,
+    padding: 24,
+    gap: 12,
   },
   title: {
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: "700",
     textAlign: "center",
+    color: COLORS.textPrimary,
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: 17,
     textAlign: "center",
-    marginBottom: 12,
+    color: COLORS.textSecondary,
+    marginBottom: 8,
   },
   errorText: {
-    color: "red",
+    color: COLORS.danger,
     textAlign: "center",
     fontSize: 14,
   },
   successText: {
-    color: "green",
+    color: COLORS.success,
     textAlign: "center",
     fontSize: 14,
   },
-  secondaryButton: {
-    width: "100%",
-    backgroundColor: "#666",
+  buttonGroup: {
+    marginTop: 4,
+    gap: 10,
+    alignItems: "center",
   },
 });
