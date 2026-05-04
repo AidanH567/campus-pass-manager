@@ -165,36 +165,34 @@ export function PassProvider({ children }: { children: ReactNode }) {
 }
 
   async function checkForOverduePasses() {
-    const now = new Date();
-    const today = getCurrentDate();
+  const now = new Date();
 
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
+  const currentHour = now.getHours();
+  const currentMinute = now.getMinutes();
 
-    const isAfterCutoff =
-      currentHour > 22 || (currentHour === 22 && currentMinute >= 53);
+  const isAfterCutoff =
+    currentHour > 18 || (currentHour === 18 && currentMinute >= 30);
 
-    if (!isAfterCutoff) return;
+  if (!isAfterCutoff) return;
 
-    const overdueCandidates = passRecords.filter(
-      (record) =>
-        record.status === "borrowed" &&
-        record.borrowedDate === today
-    );
+  const overdueCandidates = passRecords.filter(
+    (record) =>
+      record.status === "borrowed" &&
+      !record.returnedAt
+  );
 
-    if (overdueCandidates.length === 0) return;
+  if (overdueCandidates.length === 0) return;
 
-    for (const record of overdueCandidates) {
-      const { error } = await markPassOverdueInDb(record.passNumber);
+  for (const record of overdueCandidates) {
+    const { error } = await markPassOverdueInDb(record.passNumber);
 
-      if (error) {
-        console.error("Error marking overdue:", error);
-      }
+    if (error) {
+      console.error("Error marking overdue:", error);
     }
-
-    await fetchPassRecords();
   }
 
+  await fetchPassRecords();
+}
 
   return (
     <PassContext.Provider value={{
