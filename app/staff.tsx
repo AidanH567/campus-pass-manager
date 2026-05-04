@@ -68,7 +68,9 @@ export default function StaffScreen() {
                 {record.studentName} - Pass {record.passNumber}
               </Text>
 
-              <Text style={styles.cardSubtext}>Borrowed at {record.borrowedAt}</Text>
+              <Text style={styles.cardSubtext}>
+                Borrowed on {record.borrowedDate} at {record.borrowedAt}
+              </Text>
 
               <Pressable onPress={async () => await markPassOverdue(record.passNumber)}>
                 <Text style={styles.cardSubtext}>Mark Overdue</Text>
@@ -104,7 +106,9 @@ export default function StaffScreen() {
               <Text style={styles.cardText}>
                 {record.studentName} — Pass {record.passNumber}
               </Text>
-              <Text style={styles.cardSubtext}>Borrowed at {record.borrowedAt}</Text>
+              <Text style={styles.cardSubtext}>
+                Borrowed on {record.borrowedDate} at {record.borrowedAt}
+              </Text>
 
               <Text style={styles.cardSubtext}>
                 First reminder: {formatReminderTimestamp(record.firstReminderSentAt)}

@@ -172,7 +172,7 @@ export function PassProvider({ children }: { children: ReactNode }) {
     const currentMinute = now.getMinutes();
 
     const isAfterCutoff =
-      currentHour > 19 || (currentHour === 19 && currentMinute >= 10);
+      currentHour > 22 || (currentHour === 22 && currentMinute >= 53);
 
     if (!isAfterCutoff) return;
 
