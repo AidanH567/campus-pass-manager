@@ -123,6 +123,12 @@ export default function StaffScreen() {
       </View>
 
       <AppButton
+        title="Full History"
+        onPress={() => router.push("/full-history")}
+        variant="secondary"
+      />
+
+      <AppButton
         title="Back to Home"
         onPress={() => {
           clearStaffAuthentication();
