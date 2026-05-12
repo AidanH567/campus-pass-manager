@@ -4,29 +4,31 @@ import { router } from "expo-router";
 import { View, Text, Button, StyleSheet, Pressable } from "react-native";
 
 export default function HomeScreen() {
-    return (
-        <View style={styles.screen}>
+  return (
+    <View style={styles.screen}>
 
-            <Text style={styles.title}>Campus Pass Manager</Text>
-            <Text style={styles.subtitle}>Choose an option</Text>
+      <Text style={styles.title}>Campus Pass Manager</Text>
+      <Text style={styles.subtitle}>Choose an option</Text>
 
-            <AppButton
-                title="Borrow Pass"
-                onPress={() => router.push("/borrow-options")}
-            />
+      <View style={styles.buttonGroup}>
+        <AppButton
+          title="Borrow Pass"
+          onPress={() => router.push("/borrow-options")}
+        />
 
-            <AppButton
-                title="Return Pass"
-                onPress={() => router.push("/return")}
-            />
+        <AppButton
+          title="Return Pass"
+          onPress={() => router.push("/return")}
+        />
 
-             <AppButton
-                title="Staff"
-                onPress={() => router.push("/staff-login" as any)}
-            />
+        <AppButton
+          title="Staff"
+          onPress={() => router.push("/staff-login" as any)}
+        />
+      </View>
 
-        </View>
-    )
+    </View>
+  )
 }
 
 
@@ -61,7 +63,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   buttonGroup: {
+    marginTop: 24,
     gap: 12,
     alignItems: "center",
+    width: "100%",
   },
 });
