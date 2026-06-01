@@ -55,15 +55,16 @@ export default function BorrowScreen() {
         return;
       }
 
-      const didBorrow = await borrowPass(
+      const result = await borrowPass(
         name.trim(),
         normalizedEmail,
         normalizedPass
       );
 
-      if (!didBorrow) {
+      if (!result.ok) {
         setError(
-          "Unable to borrow pass. The pass or borrower may already have an active pass."
+          result.error ??
+            "Unable to borrow pass. The pass or borrower may already have an active pass."
         );
         return;
       }

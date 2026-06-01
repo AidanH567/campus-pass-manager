@@ -22,10 +22,10 @@ export default function ReturnScreen() {
       return;
     }
 
-    const didReturn = await returnPass(passNumber.trim());
+    const result = await returnPass(passNumber.trim());
 
-    if (!didReturn) {
-      setError("No matching borrowed pass found with that number.");
+    if (!result.ok) {
+      setError(result.error ?? "No matching borrowed pass found with that number.");
       return;
     }
 

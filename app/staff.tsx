@@ -3,7 +3,7 @@ import { usePassContext } from "@/context/PassContext";
 import { useStaffAuthContext } from "@/context/StaffAuthContext";
 import { router } from "expo-router";
 import { useEffect } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 export default function StaffScreen() {
   function formatReminderTimestamp(timestamp?: string | null) {
@@ -72,7 +72,14 @@ export default function StaffScreen() {
                 Borrowed on {record.borrowedDate} at {record.borrowedAt}
               </Text>
 
-              <Pressable onPress={async () => await markPassOverdue(record.passNumber)}>
+              <Pressable
+                onPress={async () => {
+                  const result = await markPassOverdue(record.passNumber);
+                  if (!result.ok && result.error) {
+                    Alert.alert("Could not mark overdue", result.error);
+                  }
+                }}
+              >
                 <Text style={styles.cardSubtext}>Mark Overdue</Text>
               </Pressable>
             </View>

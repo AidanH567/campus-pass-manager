@@ -56,15 +56,20 @@ export default function BorrowExistingScreen() {
         return;
       }
 
-      const didBorrow = await borrowPassWithExistingEmail(
+      const result = await borrowPassWithExistingEmail(
         normalizedEmail,
         normalizedPass
       );
 
-      if (!didBorrow) {
-        setShowNewBorrowerButton(true);
+      if (!result.ok) {
+        // Only offer the "new borrower" path for a genuine not-found/conflict,
+        // not when a real system error occurred.
+        if (!result.error) {
+          setShowNewBorrowerButton(true);
+        }
         setError(
-          "No previous borrower found with that email, or the borrower/pass already has an active checkout."
+          result.error ??
+            "No previous borrower found with that email, or the borrower/pass already has an active checkout."
         );
         return;
       }

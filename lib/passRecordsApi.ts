@@ -52,7 +52,7 @@ export async function findLatestPassRecordByEmail(email: string) {
   return await supabase
     .from("pass_records")
     .select("*")
-    .eq("email", email)
+    .eq("email", email.trim().toLowerCase())
     .order("created_at", { ascending: false })
     .limit(1)
     .single();

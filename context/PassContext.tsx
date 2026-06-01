@@ -10,13 +10,22 @@ import type { ReactNode } from "react";
 import { createContext, useContext, useEffect, useState } from "react";
 
 
+// Result of a mutation so screens can tell apart:
+//   ok=true             -> succeeded
+//   ok=false, error=null -> completed but no row matched (not found / already active)
+//   ok=false, error="..." -> a real DB/system failure to surface to the user
+export type MutationResult = {
+  ok: boolean;
+  error: string | null;
+};
+
 type PassContextType = {
   passRecords: PassRecord[];
-  borrowPass: (studentName: string, email: string, passNumber: string) => Promise<boolean>;
-  returnPass: (passNumber: string) => Promise<boolean>;
-  markPassOverdue: (passNumber: string) => Promise<boolean>;
+  borrowPass: (studentName: string, email: string, passNumber: string) => Promise<MutationResult>;
+  returnPass: (passNumber: string) => Promise<MutationResult>;
+  markPassOverdue: (passNumber: string) => Promise<MutationResult>;
   checkForOverduePasses: () => Promise<void>;
-  borrowPassWithExistingEmail: (email: string, passNumber: string) => Promise<boolean>;
+  borrowPassWithExistingEmail: (email: string, passNumber: string) => Promise<MutationResult>;
 };
 
 const PassContext = createContext<PassContextType | undefined>(undefined);
@@ -29,7 +38,13 @@ function getCurrentTime() {
 }
 
 function getCurrentDate() {
-  return new Date().toLocaleDateString();
+  // Explicit DD/MM/YYYY so the stored value is locale-independent
+  // (toLocaleDateString() varied by device locale, which broke Full History filtering).
+  const now = new Date();
+  const day = String(now.getDate()).padStart(2, "0");
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const year = now.getFullYear();
+  return `${day}/${month}/${year}`;
 }
 
 export function PassProvider({ children }: { children: ReactNode }) {
@@ -81,17 +96,22 @@ export function PassProvider({ children }: { children: ReactNode }) {
   }
 
 
-  async function borrowPassWithExistingEmail(email: string, passNumber: string) {
+  async function borrowPassWithExistingEmail(email: string, passNumber: string): Promise<MutationResult> {
 
     if (hasActivePassForStudent(email) || isPassCurrentlyInUse(passNumber)) {
-      return false;
+      return { ok: false, error: null };
     }
-    
+
     const { data, error } = await findLatestPassRecordByEmail(email);
 
-    if (error || !data) {
-      console.error("No previous borrower found for that email:", error);
-      return false;
+    // PGRST116 = "no rows" from .single() — a legit "not found", not a system error.
+    if (error && error.code !== "PGRST116") {
+      console.error("Error looking up previous borrower:", error);
+      return { ok: false, error: error.message ?? "Could not look up that email." };
+    }
+
+    if (!data) {
+      return { ok: false, error: null };
     }
 
     const { error: createError } = await createPassRecordInDb({
@@ -105,17 +125,17 @@ export function PassProvider({ children }: { children: ReactNode }) {
 
     if (createError) {
       console.error("Error creating pass record for existing borrower:", createError);
-      return false;
+      return { ok: false, error: createError.message ?? "Could not save the borrow record." };
     }
 
     await fetchPassRecords();
-    return true;
+    return { ok: true, error: null };
   }
 
-  async function borrowPass(studentName: string, email: string, passNumber: string) {
+  async function borrowPass(studentName: string, email: string, passNumber: string): Promise<MutationResult> {
 
     if (hasActivePassForStudent(email) || isPassCurrentlyInUse(passNumber)) {
-      return false;
+      return { ok: false, error: null };
     }
     const { error } = await createPassRecordInDb({
       student_name: studentName,
@@ -128,14 +148,14 @@ export function PassProvider({ children }: { children: ReactNode }) {
 
     if (error) {
       console.error("Error creating pass record:", error);
-      return false;
+      return { ok: false, error: error.message ?? "Could not save the borrow record." };
     }
 
     await fetchPassRecords();
-    return true;
+    return { ok: true, error: null };
   }
 
-  async function returnPass(passNumber: string) {
+  async function returnPass(passNumber: string): Promise<MutationResult> {
     const { data, error } = await markPassReturnedInDb(
       passNumber,
       getCurrentTime()
@@ -143,25 +163,25 @@ export function PassProvider({ children }: { children: ReactNode }) {
 
     if (error) {
       console.error("Error returning pass:", error);
-      return false;
+      return { ok: false, error: error.message ?? "Could not return the pass." };
     }
 
     await fetchPassRecords();
 
-    return !!data && data.length > 0;
+    return { ok: !!data && data.length > 0, error: null };
   }
 
-  async function markPassOverdue(passNumber: string) {
+  async function markPassOverdue(passNumber: string): Promise<MutationResult> {
   const { data, error } = await markPassOverdueInDb(passNumber);
 
   if (error) {
     console.error("Error marking pass overdue:", error);
-    return false;
+    return { ok: false, error: error.message ?? "Could not mark the pass overdue." };
   }
 
   await fetchPassRecords();
 
-  return !!data && data.length > 0;
+  return { ok: !!data && data.length > 0, error: null };
 }
 
   async function checkForOverduePasses() {

@@ -7,6 +7,17 @@ import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 
+function normalizeDateKey(value: string) {
+  // Tolerant date matching: unify separators and strip leading zeros so
+  // "01/06/2026" and "1/6/2026" compare equal regardless of how they were stored.
+  return value
+    .trim()
+    .replace(/[.\-]/g, "/")
+    .split("/")
+    .map((part) => part.replace(/^0+(?=\d)/, ""))
+    .join("/");
+}
+
 export default function FullHistoryScreen() {
   const [filterDate, setFilterDate] = useState("");
   const { passRecords } = usePassContext();
@@ -25,7 +36,9 @@ export default function FullHistoryScreen() {
       return passRecords;
     }
 
-    return passRecords.filter((record) => record.borrowedDate === normalizedDate);
+    return passRecords.filter(
+      (record) => normalizeDateKey(record.borrowedDate) === normalizeDateKey(normalizedDate)
+    );
   }, [filterDate, passRecords]);
 
   if (!isStaffAuthenticated) {
@@ -38,9 +51,9 @@ export default function FullHistoryScreen() {
       <Text style={styles.subtitle}>All borrow records</Text>
 
       <View style={styles.filterCard}>
-        <Text style={styles.filterLabel}>Filter by borrowed date (MM/DD/YYYY)</Text>
+        <Text style={styles.filterLabel}>Filter by borrowed date (DD/MM/YYYY)</Text>
         <FormInput
-          placeholder="Example: 05/05/2026"
+          placeholder="Example: 13/05/2026"
           value={filterDate}
           onChangeText={setFilterDate}
         />
