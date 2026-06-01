@@ -1,52 +1,69 @@
-import { View, Text, StyleSheet } from 'react-native';
-import { router } from "expo-router"
-import AppButton from '@/components/AppButton';
+import { View, Text, StyleSheet } from "react-native";
+import { router } from "expo-router";
+import AppButton from "@/components/AppButton";
+import { COLORS } from "@/lib/theme";
 
 export default function BorrowOptionsScreen() {
-    return (
-        <View style={styles.container}>
+  return (
+    <View style={styles.screen}>
+      <View style={styles.card}>
+        <Text style={styles.title}>Borrow Pass</Text>
+        <Text style={styles.subtitle}>Choose an option</Text>
 
-            <Text style={styles.title}>Borrow Pass</Text>
-            <Text style={styles.subtitle}>Choose an option</Text>
+        <View style={styles.buttonGroup}>
+          <AppButton
+            title="First-time borrower"
+            onPress={() => router.push("/borrow")}
+          />
 
-            <AppButton
-                title="Never borrowed a pass before"
-                onPress={() => router.push("/borrow")} />
+          <AppButton
+            title="Returning borrower"
+            onPress={() => router.push("/borrow-existing")}
+          />
 
-            <AppButton
-                title="I have borrowed a pass before"
-                onPress={() => router.push("/borrow-existing")}
-            />
-
-            <AppButton
-                title="Back to Home"
-                onPress={() => router.replace("/")}
-                style={styles.secondaryButton}
-            />
-
+          <AppButton
+            title="Back to Home"
+            onPress={() => router.replace("/")}
+            variant="secondary"
+          />
         </View>
-    )
+      </View>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 24,
-        justifyContent: "center",
-        gap: 16,
-    },
-    title: {
-        fontSize: 28,
-        fontWeight: "700",
-        textAlign: "center",
-    },
-    subtitle: {
-        fontSize: 18,
-        textAlign: "center",
-        marginBottom: 12,
-    },
-    secondaryButton: {
-        width: "100%",
-        backgroundColor: "#666",
-    },
+  screen: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+  card: {
+    width: "100%",
+    maxWidth: 560,
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 20,
+    padding: 24,
+    gap: 14,
+  },
+  title: {
+    fontSize: 30,
+    fontWeight: "700",
+    color: COLORS.textPrimary,
+    textAlign: "center",
+  },
+  subtitle: {
+    fontSize: 17,
+    color: COLORS.textSecondary,
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  buttonGroup: {
+    gap: 12,
+    alignItems: "center",
+  },
 });

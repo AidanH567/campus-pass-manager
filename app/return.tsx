@@ -4,87 +4,104 @@ import FormInput from "@/components/FormInput";
 import AppButton from "@/components/AppButton";
 import { router } from "expo-router";
 import { usePassContext } from "@/context/PassContext";
+import { COLORS } from "@/lib/theme";
 
 export default function ReturnScreen() {
-    const [passNumber, setPassNumber] = useState("");
-    const [error, setError] = useState("");
-    const [successMessage, setSuccessMessage] = useState("");
+  const [passNumber, setPassNumber] = useState("");
+  const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
-    const { returnPass } = usePassContext();
+  const { returnPass } = usePassContext();
 
-    async function handleReturn() {
-        setError("");
-        setSuccessMessage("");
+  async function handleReturn() {
+    setError("");
+    setSuccessMessage("");
 
-        if (!passNumber.trim()) {
-            setError("Please Enter a Pass Number")
-            return;
-        }
-
-        const didReturn = await returnPass(passNumber.trim());
-
-        if (!didReturn) {
-            setError("No matching borrowed pass found with that number.")
-            return;
-        }
-
-        setSuccessMessage("Pass returned successfully")
-        setPassNumber("")
+    if (!passNumber.trim()) {
+      setError("Please Enter a Pass Number");
+      return;
     }
 
-    return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Return Pass</Text>
+    const didReturn = await returnPass(passNumber.trim());
 
-            <FormInput
-                placeholder="Enter pass number"
-                value={passNumber}
-                onChangeText={setPassNumber}
-            />
+    if (!didReturn) {
+      setError("No matching borrowed pass found with that number.");
+      return;
+    }
 
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+    setSuccessMessage("Pass returned successfully");
+    setPassNumber("");
+  }
 
-            {successMessage ? (
-                <Text style={styles.successText}>{successMessage}</Text>
-            ): null}
+  return (
+    <View style={styles.screen}>
+      <View style={styles.card}>
+        <Text style={styles.title}>Return Pass</Text>
 
-            <AppButton title="Confirm Return" onPress={handleReturn} />
+        <FormInput
+          placeholder="Enter pass number"
+          value={passNumber}
+          onChangeText={setPassNumber}
+        />
 
-            <AppButton
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+        {successMessage ? (
+          <Text style={styles.successText}>{successMessage}</Text>
+        ) : null}
+
+        <View style={styles.buttonGroup}>
+          <AppButton title="Confirm Return" onPress={handleReturn} />
+
+          <AppButton
             title="Back to Home"
             onPress={() => router.replace("/")}
-            style={styles.secondaryButton}
-            />
-
+            variant="secondary"
+          />
         </View>
-    );
+      </View>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 24,
-        justifyContent: "center",
-        gap: 14,
-    },
-    title: {
-        fontSize: 28,
-        fontWeight: "700",
-        marginBottom: 10,
-        textAlign: "center",
-    },
-    errorText: {
-        color: "red",
-        textAlign: "center",
-        fontSize: 14,
-    },
-    successText: {
-        color: "green",
-        textAlign: "center",
-        fontSize: 14,
-    },
-    secondaryButton: {
-        width: "100%",
-        backgroundColor: "#666",
-    },
+  screen: {
+    flex: 1,
+    padding: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: COLORS.background,
+  },
+  card: {
+    width: "100%",
+    maxWidth: 560,
+    backgroundColor: COLORS.surface,
+    borderColor: COLORS.border,
+    borderWidth: 1,
+    borderRadius: 20,
+    padding: 24,
+    gap: 12,
+  },
+  title: {
+    fontSize: 30,
+    fontWeight: "700",
+    textAlign: "center",
+    color: COLORS.textPrimary,
+    marginBottom: 6,
+  },
+  errorText: {
+    color: COLORS.danger,
+    textAlign: "center",
+    fontSize: 14,
+  },
+  successText: {
+    color: COLORS.success,
+    textAlign: "center",
+    fontSize: 14,
+  },
+  buttonGroup: {
+    marginTop: 4,
+    gap: 10,
+    alignItems: "center",
+  },
 });

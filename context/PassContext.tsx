@@ -12,7 +12,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 
 type PassContextType = {
   passRecords: PassRecord[];
-  borrowPass: (studentName: string, email: string, passNumber: string) => Promise<void>;
+  borrowPass: (studentName: string, email: string, passNumber: string) => Promise<boolean>;
   returnPass: (passNumber: string) => Promise<boolean>;
   markPassOverdue: (passNumber: string) => Promise<boolean>;
   checkForOverduePasses: () => Promise<void>;
@@ -64,7 +64,29 @@ export function PassProvider({ children }: { children: ReactNode }) {
 
   }
 
+    function hasActivePassForStudent(email: string) {
+    return passRecords.some(
+      (record) =>
+        record.email.toLowerCase() === email.trim().toLowerCase() &&
+        (record.status === "borrowed" || record.status === "overdue")
+    );
+  }
+
+  function isPassCurrentlyInUse(passNumber: string) {
+    return passRecords.some(
+      (record) =>
+        record.passNumber.trim() === passNumber.trim() &&
+        (record.status === "borrowed" || record.status === "overdue")
+    );
+  }
+
+
   async function borrowPassWithExistingEmail(email: string, passNumber: string) {
+
+    if (hasActivePassForStudent(email) || isPassCurrentlyInUse(passNumber)) {
+      return false;
+    }
+    
     const { data, error } = await findLatestPassRecordByEmail(email);
 
     if (error || !data) {
@@ -91,6 +113,10 @@ export function PassProvider({ children }: { children: ReactNode }) {
   }
 
   async function borrowPass(studentName: string, email: string, passNumber: string) {
+
+    if (hasActivePassForStudent(email) || isPassCurrentlyInUse(passNumber)) {
+      return false;
+    }
     const { error } = await createPassRecordInDb({
       student_name: studentName,
       email,
@@ -102,10 +128,11 @@ export function PassProvider({ children }: { children: ReactNode }) {
 
     if (error) {
       console.error("Error creating pass record:", error);
-      return;
+      return false;
     }
 
     await fetchPassRecords();
+    return true;
   }
 
   async function returnPass(passNumber: string) {
@@ -125,49 +152,47 @@ export function PassProvider({ children }: { children: ReactNode }) {
   }
 
   async function markPassOverdue(passNumber: string) {
-    const { data, error } = await markPassOverdueInDb(passNumber);
+  const { data, error } = await markPassOverdueInDb(passNumber);
 
-    if (error) {
-      console.error("Error marking pass overdue:", error);
-      return false;
-    }
-
-    await fetchPassRecords();
-
-    return !!data && data.length > 0;
+  if (error) {
+    console.error("Error marking pass overdue:", error);
+    return false;
   }
+
+  await fetchPassRecords();
+
+  return !!data && data.length > 0;
+}
 
   async function checkForOverduePasses() {
-    const now = new Date();
-    const today = getCurrentDate();
+  const now = new Date();
 
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
+  const currentHour = now.getHours();
+  const currentMinute = now.getMinutes();
 
-    const isAfterCutoff =
-      currentHour > 19 || (currentHour === 19 && currentMinute >= 10);
+  const isAfterCutoff =
+    currentHour > 18 || (currentHour === 18 && currentMinute >= 30);
 
-    if (!isAfterCutoff) return;
+  if (!isAfterCutoff) return;
 
-    const overdueCandidates = passRecords.filter(
-      (record) =>
-        record.status === "borrowed" &&
-        record.borrowedDate === today
-    );
+  const overdueCandidates = passRecords.filter(
+    (record) =>
+      record.status === "borrowed" &&
+      !record.returnedAt
+  );
 
-    if (overdueCandidates.length === 0) return;
+  if (overdueCandidates.length === 0) return;
 
-    for (const record of overdueCandidates) {
-      const { error } = await markPassOverdueInDb(record.passNumber);
+  for (const record of overdueCandidates) {
+    const { error } = await markPassOverdueInDb(record.passNumber);
 
-      if (error) {
-        console.error("Error marking overdue:", error);
-      }
+    if (error) {
+      console.error("Error marking overdue:", error);
     }
-
-    await fetchPassRecords();
   }
 
+  await fetchPassRecords();
+}
 
   return (
     <PassContext.Provider value={{
