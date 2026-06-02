@@ -138,7 +138,7 @@ export default function StaffScreen() {
           variant="secondary"
           onPress={() => router.push("/full-history")}
         />
-        <AppButton title="Log out" variant="ghost" onPress={logout} />
+        <AppButton title="Back to home" variant="ghost" onPress={logout} />
       </View>
     </Screen>
   );
