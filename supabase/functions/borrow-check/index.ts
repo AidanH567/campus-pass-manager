@@ -8,6 +8,15 @@ const supabase = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
 );
 
+// CORS: this endpoint is called from the browser (web build / Vercel), so it
+// must answer the preflight and send these headers on every response.
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+};
+
 type CheckResult = {
   emailHasActivePass: boolean;
   passInUse: boolean;
@@ -16,12 +25,16 @@ type CheckResult = {
 
 function json(payload: unknown, status = 200) {
   return new Response(JSON.stringify(payload), {
-    headers: { "Content-Type": "application/json" },
+    headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
     status,
   });
 }
 
 Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: CORS_HEADERS });
+  }
+
   if (req.method !== "POST") {
     return json({ error: "Method not allowed" }, 405);
   }
