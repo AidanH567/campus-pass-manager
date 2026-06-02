@@ -28,6 +28,11 @@ export default function StaffLoginScreen() {
     setError("");
   }
 
+  function handleBack() {
+    Haptics.selectionAsync().catch(() => {});
+    router.replace("/");
+  }
+
   useEffect(() => {
     if (code.length === 4) {
       if (code === STAFF_PASSCODE) {
@@ -44,8 +49,18 @@ export default function StaffLoginScreen() {
   const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
   return (
-    <Screen scroll center>
-      <View style={styles.wrap}>
+    <Screen>
+      <Pressable
+        onPress={handleBack}
+        hitSlop={10}
+        accessibilityRole="button"
+        accessibilityLabel="Go back"
+        style={({ pressed }) => [styles.back, pressed ? styles.backPressed : null]}
+      >
+        <Ionicons name="chevron-back" size={22} color={COLORS.textPrimary} />
+      </Pressable>
+
+      <View style={styles.center}>
         <View style={styles.lock}>
           <Ionicons name="lock-closed" size={28} color={COLORS.primary} />
         </View>
@@ -101,7 +116,18 @@ export default function StaffLoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  wrap: { alignItems: "center", gap: SPACING.md },
+  back: {
+    width: 40,
+    height: 40,
+    borderRadius: RADII.md,
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  backPressed: { backgroundColor: COLORS.surfaceAlt },
+  center: { flex: 1, alignItems: "center", justifyContent: "center", gap: SPACING.md },
   lock: {
     width: 64,
     height: 64,
