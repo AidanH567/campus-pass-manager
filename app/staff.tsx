@@ -1,23 +1,29 @@
 import AppButton from "@/components/AppButton";
+import Card from "@/components/Card";
+import Screen from "@/components/Screen";
+import ScreenHeader from "@/components/ScreenHeader";
+import StatusPill from "@/components/StatusPill";
 import { usePassContext } from "@/context/PassContext";
 import { useStaffAuthContext } from "@/context/StaffAuthContext";
+import { COLORS, RADII, SPACING, TYPE } from "@/lib/theme";
+import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useEffect } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import type { ReactNode } from "react";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+
+function formatReminderTimestamp(timestamp?: string | null) {
+  if (!timestamp) return "Not sent";
+  return new Date(timestamp).toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
 export default function StaffScreen() {
-  function formatReminderTimestamp(timestamp?: string | null) {
-    if (!timestamp) return "Not sent";
-
-    return new Date(timestamp).toLocaleString("en-GB", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  }
-
   const { passRecords, markPassOverdue, checkForOverduePasses } = usePassContext();
   const { isStaffAuthenticated, clearStaffAuthentication } = useStaffAuthContext();
 
@@ -44,160 +50,162 @@ export default function StaffScreen() {
     return null;
   }
 
-  const borrowedPasses = passRecords.filter((record) => record.status === "borrowed");
+  const borrowedPasses = passRecords.filter((r) => r.status === "borrowed");
+  const returnedPasses = passRecords.filter((r) => r.status === "returned");
+  const overduePasses = passRecords.filter((r) => r.status === "overdue");
 
-  const returnedPasses = passRecords.filter((record) => record.status === "returned");
+  async function handleMarkOverdue(passNumber: string) {
+    const result = await markPassOverdue(passNumber);
+    if (!result.ok && result.error) {
+      Alert.alert("Could not mark overdue", result.error);
+    }
+  }
 
-  const overduePasses = passRecords.filter((record) => record.status === "overdue");
+  function logout() {
+    clearStaffAuthentication();
+    router.replace("/");
+  }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Staff View</Text>
-      <Text style={styles.subtitle}>Card Overview</Text>
+    <Screen scroll>
+      <ScreenHeader title="Staff" subtitle="Card overview" onBack={logout} />
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>
-          Currently Borrowed ({borrowedPasses.length})
-        </Text>
-        {borrowedPasses.length === 0 ? (
-          <Text style={styles.placeholderText}>No borrowed passes yet.</Text>
-        ) : (
-          borrowedPasses.map((record) => (
-            <View key={record.id} style={styles.card}>
-              <Text style={styles.cardText}>
-                {record.studentName} - Pass {record.passNumber}
-              </Text>
-
-              <Text style={styles.cardSubtext}>
-                Borrowed on {record.borrowedDate} at {record.borrowedAt}
-              </Text>
-
-              <Pressable
-                onPress={async () => {
-                  const result = await markPassOverdue(record.passNumber);
-                  if (!result.ok && result.error) {
-                    Alert.alert("Could not mark overdue", result.error);
-                  }
-                }}
-              >
-                <Text style={styles.cardSubtext}>Mark Overdue</Text>
-              </Pressable>
+      <Section title="Currently borrowed" count={borrowedPasses.length} emptyText="No borrowed passes right now.">
+        {borrowedPasses.map((record) => (
+          <Card key={record.id} variant="outlined" style={styles.passCard}>
+            <View style={styles.passTop}>
+              <Text style={styles.passName}>{record.studentName}</Text>
+              <StatusPill status="borrowed" />
             </View>
-          ))
-        )}
-      </View>
+            <Text style={styles.passMeta}>Pass {record.passNumber}</Text>
+            <Text style={styles.passMeta}>
+              Borrowed {record.borrowedDate} at {record.borrowedAt}
+            </Text>
+            <Pressable
+              onPress={() => handleMarkOverdue(record.passNumber)}
+              style={({ pressed }) => [styles.markBtn, pressed ? styles.markBtnPressed : null]}
+            >
+              <Ionicons name="alert-circle-outline" size={16} color={COLORS.danger} />
+              <Text style={styles.markText}>Mark overdue</Text>
+            </Pressable>
+          </Card>
+        ))}
+      </Section>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Returned Today ({returnedPasses.length})</Text>
-        {returnedPasses.length === 0 ? (
-          <Text style={styles.placeholderText}>No returned passes.</Text>
-        ) : (
-          returnedPasses.map((record) => (
-            <View key={record.id} style={styles.card}>
-              <Text style={styles.cardText}>
-                {record.studentName} — Pass {record.passNumber}
-              </Text>
-              <Text style={styles.cardSubtext}>Returned at {record.returnedAt}</Text>
+      <Section title="Returned today" count={returnedPasses.length} emptyText="No returned passes.">
+        {returnedPasses.map((record) => (
+          <Card key={record.id} variant="outlined" style={styles.passCard}>
+            <View style={styles.passTop}>
+              <Text style={styles.passName}>{record.studentName}</Text>
+              <StatusPill status="returned" />
             </View>
-          ))
-        )}
-      </View>
+            <Text style={styles.passMeta}>Pass {record.passNumber}</Text>
+            <Text style={styles.passMeta}>Returned at {record.returnedAt ?? "—"}</Text>
+          </Card>
+        ))}
+      </Section>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Overdue Passes ({overduePasses.length})</Text>
-        {overduePasses.length === 0 ? (
-          <Text style={styles.placeholderText}>No overdue passes.</Text>
-        ) : (
-          overduePasses.map((record) => (
-            <View key={record.id} style={styles.card}>
-              <Text style={styles.cardText}>
-                {record.studentName} — Pass {record.passNumber}
-              </Text>
-              <Text style={styles.cardSubtext}>
-                Borrowed on {record.borrowedDate} at {record.borrowedAt}
-              </Text>
-
-              <Text style={styles.cardSubtext}>
-                First reminder: {formatReminderTimestamp(record.firstReminderSentAt)}
-              </Text>
-
-              <Text style={styles.cardSubtext}>
-                Second reminder: {formatReminderTimestamp(record.secondReminderSentAt)}
+      <Section title="Overdue" count={overduePasses.length} emptyText="No overdue passes.">
+        {overduePasses.map((record) => (
+          <Card key={record.id} variant="outlined" style={styles.passCard}>
+            <View style={styles.passTop}>
+              <Text style={styles.passName}>{record.studentName}</Text>
+              <StatusPill status="overdue" />
+            </View>
+            <Text style={styles.passMeta}>Pass {record.passNumber}</Text>
+            <Text style={styles.passMeta}>
+              Borrowed {record.borrowedDate} at {record.borrowedAt}
+            </Text>
+            <View style={styles.reminderRow}>
+              <Ionicons name="mail-outline" size={14} color={COLORS.textMuted} />
+              <Text style={styles.reminderText}>
+                1st reminder: {formatReminderTimestamp(record.firstReminderSentAt)}
               </Text>
             </View>
-          ))
-        )}
+            <View style={styles.reminderRow}>
+              <Ionicons name="mail-outline" size={14} color={COLORS.textMuted} />
+              <Text style={styles.reminderText}>
+                2nd reminder: {formatReminderTimestamp(record.secondReminderSentAt)}
+              </Text>
+            </View>
+          </Card>
+        ))}
+      </Section>
+
+      <View style={styles.footer}>
+        <AppButton
+          title="Full history"
+          variant="secondary"
+          onPress={() => router.push("/full-history")}
+        />
+        <AppButton title="Log out" variant="ghost" onPress={logout} />
       </View>
+    </Screen>
+  );
+}
 
-      <AppButton
-        title="Full History"
-        onPress={() => router.push("/full-history")}
-        variant="secondary"
-      />
-
-      <AppButton
-        title="Back to Home"
-        onPress={() => {
-          clearStaffAuthentication();
-          router.replace("/");
-        }}
-        style={styles.backButton}
-      />
-    </ScrollView>
+function Section({
+  title,
+  count,
+  emptyText,
+  children,
+}: {
+  title: string;
+  count: number;
+  emptyText: string;
+  children: ReactNode;
+}) {
+  return (
+    <View style={styles.section}>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>{title}</Text>
+        <View style={styles.countPill}>
+          <Text style={styles.countText}>{count}</Text>
+        </View>
+      </View>
+      {count === 0 ? <Text style={styles.empty}>{emptyText}</Text> : children}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 24,
-    gap: 16,
+  section: { gap: SPACING.md },
+  sectionHeader: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
+  sectionTitle: { ...TYPE.subtitle, color: COLORS.textPrimary },
+  countPill: {
+    minWidth: 24,
+    height: 24,
+    paddingHorizontal: SPACING.sm,
+    borderRadius: RADII.pill,
+    backgroundColor: COLORS.primarySoft,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  title: {
-    fontSize: 28,
-    fontWeight: "700",
-    textAlign: "center",
-    marginTop: 20,
+  countText: { ...TYPE.label, color: COLORS.primary },
+  passCard: { gap: SPACING.xs, padding: SPACING.lg },
+  passTop: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: SPACING.sm,
   },
-  subtitle: {
-    fontSize: 18,
-    textAlign: "center",
-    marginBottom: 12,
+  passName: { ...TYPE.bodyStrong, color: COLORS.textPrimary, flex: 1 },
+  passMeta: { ...TYPE.caption, color: COLORS.textSecondary },
+  markBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SPACING.xs,
+    alignSelf: "flex-start",
+    marginTop: SPACING.xs,
+    paddingVertical: 6,
+    paddingHorizontal: SPACING.md,
+    borderRadius: RADII.pill,
+    backgroundColor: COLORS.dangerSoft,
   },
-  section: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 12,
-    padding: 16,
-    gap: 10,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  placeholderText: {
-    fontSize: 15,
-    color: "#666",
-  },
-  card: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 10,
-    padding: 12,
-    backgroundColor: "#f8f8f8",
-  },
-  cardText: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  cardSubtext: {
-    fontSize: 14,
-    color: "#666",
-    marginTop: 4,
-  },
-  backButton: {
-    width: "100%",
-    backgroundColor: "#666",
-    marginTop: 8,
-    marginBottom: 30,
-  },
+  markBtnPressed: { opacity: 0.7 },
+  markText: { ...TYPE.label, color: COLORS.danger },
+  reminderRow: { flexDirection: "row", alignItems: "center", gap: SPACING.xs },
+  reminderText: { ...TYPE.caption, color: COLORS.textMuted },
+  empty: { ...TYPE.body, color: COLORS.textMuted },
+  footer: { gap: SPACING.sm, marginTop: SPACING.sm, marginBottom: SPACING.xl },
 });

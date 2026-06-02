@@ -1,11 +1,15 @@
 import AppButton from "@/components/AppButton";
+import Card from "@/components/Card";
 import FormInput from "@/components/FormInput";
+import Screen from "@/components/Screen";
+import ScreenHeader from "@/components/ScreenHeader";
+import StatusPill from "@/components/StatusPill";
 import { usePassContext } from "@/context/PassContext";
 import { useStaffAuthContext } from "@/context/StaffAuthContext";
-import { COLORS } from "@/lib/theme";
+import { COLORS, SPACING, TYPE } from "@/lib/theme";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 function normalizeDateKey(value: string) {
   // Tolerant date matching: unify separators and strip leading zeros so
@@ -46,153 +50,68 @@ export default function FullHistoryScreen() {
   }
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Full History</Text>
-      <Text style={styles.subtitle}>All borrow records</Text>
+    <Screen scroll>
+      <ScreenHeader
+        title="Full history"
+        subtitle="All borrow records"
+        onBack={() => router.replace("/staff")}
+      />
 
-      <View style={styles.filterCard}>
-        <Text style={styles.filterLabel}>Filter by borrowed date (DD/MM/YYYY)</Text>
+      <Card>
         <FormInput
-          placeholder="Example: 13/05/2026"
+          label="Filter by date (DD/MM/YYYY)"
+          placeholder="e.g. 13/05/2026"
           value={filterDate}
           onChangeText={setFilterDate}
         />
+        {filterDate ? (
+          <AppButton title="Clear filter" variant="ghost" onPress={() => setFilterDate("")} />
+        ) : null}
+      </Card>
+
+      {filteredRecords.length === 0 ? (
+        <Text style={styles.empty}>No records {filterDate ? "match this date" : "yet"}.</Text>
+      ) : (
+        <View style={styles.list}>
+          {filteredRecords.map((record) => (
+            <Card key={record.id} variant="outlined" style={styles.row}>
+              <View style={styles.top}>
+                <Text style={styles.name}>{record.studentName}</Text>
+                <StatusPill status={record.status} />
+              </View>
+              <Text style={styles.meta}>
+                Pass {record.passNumber} · {record.borrowedDate} at {record.borrowedAt}
+              </Text>
+              {record.returnedAt ? (
+                <Text style={styles.meta}>Returned at {record.returnedAt}</Text>
+              ) : null}
+            </Card>
+          ))}
+        </View>
+      )}
+
+      <View style={styles.footer}>
         <AppButton
-          title="Clear Filter"
+          title="Back to staff"
           variant="secondary"
-          onPress={() => setFilterDate("")}
+          onPress={() => router.replace("/staff")}
         />
       </View>
-
-      <View style={styles.tableCard}>
-        <View style={styles.headerRow}>
-          <Text style={[styles.headerCell, styles.studentCol]}>Student</Text>
-          <Text style={[styles.headerCell, styles.passCol]}>Pass</Text>
-          <Text style={[styles.headerCell, styles.dateCol]}>Borrowed Date</Text>
-          <Text style={[styles.headerCell, styles.timeCol]}>Borrowed Time</Text>
-          <Text style={[styles.headerCell, styles.timeCol]}>Returned Time</Text>
-          <Text style={[styles.headerCell, styles.statusCol]}>Status</Text>
-        </View>
-
-        {filteredRecords.length === 0 ? (
-          <Text style={styles.emptyText}>No records match this date.</Text>
-        ) : (
-          filteredRecords.map((record) => (
-            <View key={record.id} style={styles.dataRow}>
-              <Text style={[styles.dataCell, styles.studentCol]}>
-                {record.studentName}
-              </Text>
-              <Text style={[styles.dataCell, styles.passCol]}>
-                {record.passNumber}
-              </Text>
-              <Text style={[styles.dataCell, styles.dateCol]}>
-                {record.borrowedDate}
-              </Text>
-              <Text style={[styles.dataCell, styles.timeCol]}>
-                {record.borrowedAt}
-              </Text>
-              <Text style={[styles.dataCell, styles.timeCol]}>
-                {record.returnedAt || "-"}
-              </Text>
-              <Text style={[styles.dataCell, styles.statusCol]}>
-                {record.status}
-              </Text>
-            </View>
-          ))
-        )}
-      </View>
-
-      <AppButton
-        title="Back to Staff"
-        variant="secondary"
-        onPress={() => router.replace("/staff")}
-      />
-    </ScrollView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  container: {
-    padding: 24,
-    gap: 16,
-  },
-  title: {
-    fontSize: 30,
-    fontWeight: "700",
-    color: COLORS.textPrimary,
-    textAlign: "center",
-    marginTop: 20,
-  },
-  subtitle: {
-    fontSize: 17,
-    color: COLORS.textSecondary,
-    textAlign: "center",
-  },
-  filterCard: {
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 12,
-    backgroundColor: COLORS.surface,
-    padding: 16,
-    gap: 10,
-  },
-  filterLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: COLORS.textPrimary,
-  },
-  tableCard: {
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 12,
-    backgroundColor: COLORS.surface,
-    overflow: "hidden",
-  },
-  headerRow: {
+  empty: { ...TYPE.body, color: COLORS.textMuted, textAlign: "center", paddingVertical: SPACING.lg },
+  list: { gap: SPACING.sm },
+  row: { gap: SPACING.xs, padding: SPACING.lg },
+  top: {
     flexDirection: "row",
-    backgroundColor: COLORS.primarySoft,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: SPACING.sm,
   },
-  dataRow: {
-    flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  headerCell: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: COLORS.textPrimary,
-    padding: 10,
-  },
-  dataCell: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    padding: 10,
-  },
-  studentCol: {
-    flex: 2,
-  },
-  passCol: {
-    flex: 1,
-  },
-  dateCol: {
-    flex: 1.4,
-  },
-  timeCol: {
-    flex: 1.2,
-  },
-  statusCol: {
-    flex: 1,
-    textTransform: "capitalize",
-  },
-  emptyText: {
-    padding: 16,
-    textAlign: "center",
-    color: COLORS.textSecondary,
-  },
+  name: { ...TYPE.bodyStrong, color: COLORS.textPrimary, flex: 1 },
+  meta: { ...TYPE.caption, color: COLORS.textSecondary },
+  footer: { marginTop: SPACING.sm, marginBottom: SPACING.xl },
 });

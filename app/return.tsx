@@ -1,15 +1,20 @@
-import { View, Text, StyleSheet } from "react-native";
-import { useState } from "react";
-import FormInput from "@/components/FormInput";
 import AppButton from "@/components/AppButton";
-import { router } from "expo-router";
+import Banner from "@/components/Banner";
+import Card from "@/components/Card";
+import FormInput from "@/components/FormInput";
+import Screen from "@/components/Screen";
+import ScreenHeader from "@/components/ScreenHeader";
 import { usePassContext } from "@/context/PassContext";
-import { COLORS } from "@/lib/theme";
+import { SPACING } from "@/lib/theme";
+import { router } from "expo-router";
+import { useState } from "react";
+import { StyleSheet, View } from "react-native";
 
 export default function ReturnScreen() {
   const [passNumber, setPassNumber] = useState("");
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { returnPass } = usePassContext();
 
@@ -18,90 +23,58 @@ export default function ReturnScreen() {
     setSuccessMessage("");
 
     if (!passNumber.trim()) {
-      setError("Please Enter a Pass Number");
+      setError("Please enter a pass number.");
       return;
     }
 
-    const result = await returnPass(passNumber.trim());
-
-    if (!result.ok) {
-      setError(result.error ?? "No matching borrowed pass found with that number.");
-      return;
+    setIsSubmitting(true);
+    try {
+      const result = await returnPass(passNumber.trim());
+      if (!result.ok) {
+        setError(result.error ?? "No matching borrowed pass found with that number.");
+        return;
+      }
+      setSuccessMessage("Pass returned. Thank you!");
+      setPassNumber("");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setSuccessMessage("Pass returned successfully");
-    setPassNumber("");
   }
 
   return (
-    <View style={styles.screen}>
-      <View style={styles.card}>
-        <Text style={styles.title}>Return Pass</Text>
+    <Screen scroll>
+      <ScreenHeader
+        title="Return a pass"
+        subtitle="Enter the pass number to check it back in"
+        onBack={() => router.replace("/")}
+      />
 
+      <Card>
         <FormInput
-          placeholder="Enter pass number"
+          label="Pass number"
+          placeholder="e.g. 12"
           value={passNumber}
           onChangeText={setPassNumber}
         />
 
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+        {error ? <Banner type="error" message={error} /> : null}
+        {successMessage ? <Banner type="success" message={successMessage} /> : null}
 
-        {successMessage ? (
-          <Text style={styles.successText}>{successMessage}</Text>
-        ) : null}
+        <AppButton title="Confirm return" onPress={handleReturn} loading={isSubmitting} size="lg" />
+      </Card>
 
-        <View style={styles.buttonGroup}>
-          <AppButton title="Confirm Return" onPress={handleReturn} />
-
-          <AppButton
-            title="Back to Home"
-            onPress={() => router.replace("/")}
-            variant="secondary"
-          />
-        </View>
+      <View style={styles.footer}>
+        <AppButton
+          title="Back to home"
+          variant="ghost"
+          onPress={() => router.replace("/")}
+          disabled={isSubmitting}
+        />
       </View>
-    </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    padding: 24,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: COLORS.background,
-  },
-  card: {
-    width: "100%",
-    maxWidth: 560,
-    backgroundColor: COLORS.surface,
-    borderColor: COLORS.border,
-    borderWidth: 1,
-    borderRadius: 20,
-    padding: 24,
-    gap: 12,
-  },
-  title: {
-    fontSize: 30,
-    fontWeight: "700",
-    textAlign: "center",
-    color: COLORS.textPrimary,
-    marginBottom: 6,
-  },
-  errorText: {
-    color: COLORS.danger,
-    textAlign: "center",
-    fontSize: 14,
-  },
-  successText: {
-    color: COLORS.success,
-    textAlign: "center",
-    fontSize: 14,
-  },
-  buttonGroup: {
-    marginTop: 4,
-    gap: 10,
-    alignItems: "center",
-  },
+  footer: { marginTop: SPACING.xs },
 });
