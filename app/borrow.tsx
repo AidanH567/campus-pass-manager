@@ -18,7 +18,7 @@ export default function BorrowScreen() {
   const [successMessage, setSuccessMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { borrowPass, passRecords } = usePassContext();
+  const { borrowPass } = usePassContext();
 
   async function handleBorrow() {
     setError("");
@@ -31,32 +31,11 @@ export default function BorrowScreen() {
         return;
       }
 
-      const normalizedEmail = email.trim().toLowerCase();
-      const normalizedPass = passNumber.trim();
-
-      const passAlreadyInUse = passRecords.some(
-        (record) =>
-          record.passNumber === normalizedPass &&
-          (record.status === "borrowed" || record.status === "overdue")
+      const result = await borrowPass(
+        name.trim(),
+        email.trim().toLowerCase(),
+        passNumber.trim()
       );
-
-      if (passAlreadyInUse) {
-        setError("That pass is already checked out.");
-        return;
-      }
-
-      const studentHasActivePass = passRecords.some(
-        (record) =>
-          record.email.toLowerCase() === normalizedEmail &&
-          (record.status === "borrowed" || record.status === "overdue")
-      );
-
-      if (studentHasActivePass) {
-        setError("You already have an active pass. Return it before borrowing another.");
-        return;
-      }
-
-      const result = await borrowPass(name.trim(), normalizedEmail, normalizedPass);
 
       if (!result.ok) {
         setError(

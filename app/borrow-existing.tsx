@@ -18,7 +18,7 @@ export default function BorrowExistingScreen() {
   const [showNewBorrowerButton, setShowNewBorrowerButton] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { borrowPassWithExistingEmail, passRecords } = usePassContext();
+  const { borrowPassWithExistingEmail } = usePassContext();
 
   async function handleBorrowExisting() {
     setError("");
@@ -32,32 +32,10 @@ export default function BorrowExistingScreen() {
         return;
       }
 
-      const normalizedEmail = email.trim().toLowerCase();
-      const normalizedPass = passNumber.trim();
-
-      const passAlreadyInUse = passRecords.some(
-        (record) =>
-          record.passNumber === normalizedPass &&
-          (record.status === "borrowed" || record.status === "overdue")
+      const result = await borrowPassWithExistingEmail(
+        email.trim().toLowerCase(),
+        passNumber.trim()
       );
-
-      if (passAlreadyInUse) {
-        setError("That pass is already checked out.");
-        return;
-      }
-
-      const studentHasActivePass = passRecords.some(
-        (record) =>
-          record.email.toLowerCase() === normalizedEmail &&
-          (record.status === "borrowed" || record.status === "overdue")
-      );
-
-      if (studentHasActivePass) {
-        setError("You already have an active pass. Return it before borrowing another.");
-        return;
-      }
-
-      const result = await borrowPassWithExistingEmail(normalizedEmail, normalizedPass);
 
       if (!result.ok) {
         // Only offer the "new borrower" path for a genuine not-found/conflict,
