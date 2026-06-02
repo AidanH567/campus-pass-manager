@@ -20,6 +20,7 @@ export type MutationResult = {
 
 type PassContextType = {
   passRecords: PassRecord[];
+  loading: boolean;
   borrowPass: (studentName: string, email: string, passNumber: string) => Promise<MutationResult>;
   returnPass: (passNumber: string) => Promise<MutationResult>;
   markPassOverdue: (passNumber: string) => Promise<MutationResult>;
@@ -46,9 +47,10 @@ const CHECK_FAILED = "Could not verify pass availability. Please try again.";
 
 export function PassProvider({ children }: { children: ReactNode }) {
   const [passRecords, setPassRecords] = useState<PassRecord[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchPassRecords();
+    fetchPassRecords().finally(() => setLoading(false));
   }, []);
 
   async function fetchPassRecords() {
@@ -198,6 +200,7 @@ export function PassProvider({ children }: { children: ReactNode }) {
     <PassContext.Provider
       value={{
         passRecords,
+        loading,
         borrowPass,
         returnPass,
         markPassOverdue,

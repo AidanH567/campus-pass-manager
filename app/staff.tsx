@@ -11,7 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 
 function formatReminderTimestamp(timestamp?: string | null) {
   if (!timestamp) return "Not sent";
@@ -25,7 +25,7 @@ function formatReminderTimestamp(timestamp?: string | null) {
 }
 
 export default function StaffScreen() {
-  const { passRecords, markPassOverdue, returnPass, checkForOverduePasses } =
+  const { passRecords, loading, markPassOverdue, returnPass, checkForOverduePasses } =
     usePassContext();
   const { isStaffAuthenticated, clearStaffAuthentication } = useStaffAuthContext();
   const [actionError, setActionError] = useState("");
@@ -43,14 +43,19 @@ export default function StaffScreen() {
     runOverdueCheck();
   }, [checkForOverduePasses, isStaffAuthenticated]);
 
-  useEffect(() => {
-    return () => {
-      clearStaffAuthentication();
-    };
-  }, [clearStaffAuthentication]);
-
   if (!isStaffAuthenticated) {
     return null;
+  }
+
+  if (loading) {
+    return (
+      <Screen>
+        <View style={styles.loadingBox}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text style={styles.loadingText}>Loading passes…</Text>
+        </View>
+      </Screen>
+    );
   }
 
   const borrowedPasses = passRecords.filter((r) => r.status === "borrowed");
@@ -253,5 +258,7 @@ const styles = StyleSheet.create({
   reminderRow: { flexDirection: "row", alignItems: "center", gap: SPACING.xs },
   reminderText: { ...TYPE.caption, color: COLORS.textMuted },
   empty: { ...TYPE.body, color: COLORS.textMuted },
+  loadingBox: { flex: 1, alignItems: "center", justifyContent: "center", gap: SPACING.md },
+  loadingText: { ...TYPE.body, color: COLORS.textSecondary },
   footer: { gap: SPACING.sm, marginTop: SPACING.sm, marginBottom: SPACING.xl },
 });
