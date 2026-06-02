@@ -24,7 +24,8 @@ function formatReminderTimestamp(timestamp?: string | null) {
 }
 
 export default function StaffScreen() {
-  const { passRecords, markPassOverdue, checkForOverduePasses } = usePassContext();
+  const { passRecords, markPassOverdue, returnPass, checkForOverduePasses } =
+    usePassContext();
   const { isStaffAuthenticated, clearStaffAuthentication } = useStaffAuthContext();
 
   useEffect(() => {
@@ -61,6 +62,13 @@ export default function StaffScreen() {
     }
   }
 
+  async function handleMarkReturned(passNumber: string) {
+    const result = await returnPass(passNumber);
+    if (!result.ok && result.error) {
+      Alert.alert("Could not mark returned", result.error);
+    }
+  }
+
   function logout() {
     clearStaffAuthentication();
     router.replace("/");
@@ -81,13 +89,22 @@ export default function StaffScreen() {
             <Text style={styles.passMeta}>
               Borrowed {record.borrowedDate} at {record.borrowedAt}
             </Text>
-            <Pressable
-              onPress={() => handleMarkOverdue(record.passNumber)}
-              style={({ pressed }) => [styles.markBtn, pressed ? styles.markBtnPressed : null]}
-            >
-              <Ionicons name="alert-circle-outline" size={16} color={COLORS.danger} />
-              <Text style={styles.markText}>Mark overdue</Text>
-            </Pressable>
+            <View style={styles.actions}>
+              <Pressable
+                onPress={() => handleMarkOverdue(record.passNumber)}
+                style={({ pressed }) => [styles.markBtn, pressed ? styles.markBtnPressed : null]}
+              >
+                <Ionicons name="alert-circle-outline" size={16} color={COLORS.danger} />
+                <Text style={styles.markText}>Mark overdue</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => handleMarkReturned(record.passNumber)}
+                style={({ pressed }) => [styles.returnBtn, pressed ? styles.markBtnPressed : null]}
+              >
+                <Ionicons name="checkmark-circle-outline" size={16} color={COLORS.success} />
+                <Text style={styles.returnText}>Mark returned</Text>
+              </Pressable>
+            </View>
           </Card>
         ))}
       </Section>
@@ -127,6 +144,15 @@ export default function StaffScreen() {
               <Text style={styles.reminderText}>
                 2nd reminder: {formatReminderTimestamp(record.secondReminderSentAt)}
               </Text>
+            </View>
+            <View style={styles.actions}>
+              <Pressable
+                onPress={() => handleMarkReturned(record.passNumber)}
+                style={({ pressed }) => [styles.returnBtn, pressed ? styles.markBtnPressed : null]}
+              >
+                <Ionicons name="checkmark-circle-outline" size={16} color={COLORS.success} />
+                <Text style={styles.returnText}>Mark returned</Text>
+              </Pressable>
             </View>
           </Card>
         ))}
@@ -191,19 +217,33 @@ const styles = StyleSheet.create({
   },
   passName: { ...TYPE.bodyStrong, color: COLORS.textPrimary, flex: 1 },
   passMeta: { ...TYPE.caption, color: COLORS.textSecondary },
+  actions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: SPACING.sm,
+    marginTop: SPACING.xs,
+  },
   markBtn: {
     flexDirection: "row",
     alignItems: "center",
     gap: SPACING.xs,
-    alignSelf: "flex-start",
-    marginTop: SPACING.xs,
     paddingVertical: 6,
     paddingHorizontal: SPACING.md,
     borderRadius: RADII.pill,
     backgroundColor: COLORS.dangerSoft,
   },
+  returnBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SPACING.xs,
+    paddingVertical: 6,
+    paddingHorizontal: SPACING.md,
+    borderRadius: RADII.pill,
+    backgroundColor: COLORS.successSoft,
+  },
   markBtnPressed: { opacity: 0.7 },
   markText: { ...TYPE.label, color: COLORS.danger },
+  returnText: { ...TYPE.label, color: COLORS.success },
   reminderRow: { flexDirection: "row", alignItems: "center", gap: SPACING.xs },
   reminderText: { ...TYPE.caption, color: COLORS.textMuted },
   empty: { ...TYPE.body, color: COLORS.textMuted },

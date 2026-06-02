@@ -30,7 +30,9 @@ export async function markPassReturnedInDb(passNumber: string, returnedAt: strin
     .from("pass_records")
     .update({ returned_at: returnedAt, status: "returned" })
     .eq("pass_number", passNumber)
-    .eq("status", "borrowed")
+    // Accept borrowed OR overdue so a pass can be returned even after it tips
+    // into overdue (covers both the student Return screen and the staff button).
+    .in("status", ["borrowed", "overdue"])
     .select("id");
 }
 
