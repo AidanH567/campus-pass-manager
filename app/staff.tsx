@@ -1,4 +1,5 @@
 import AppButton from "@/components/AppButton";
+import Banner from "@/components/Banner";
 import Card from "@/components/Card";
 import Screen from "@/components/Screen";
 import ScreenHeader from "@/components/ScreenHeader";
@@ -8,9 +9,9 @@ import { useStaffAuthContext } from "@/context/StaffAuthContext";
 import { COLORS, RADII, SPACING, TYPE } from "@/lib/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 function formatReminderTimestamp(timestamp?: string | null) {
   if (!timestamp) return "Not sent";
@@ -27,6 +28,7 @@ export default function StaffScreen() {
   const { passRecords, markPassOverdue, returnPass, checkForOverduePasses } =
     usePassContext();
   const { isStaffAuthenticated, clearStaffAuthentication } = useStaffAuthContext();
+  const [actionError, setActionError] = useState("");
 
   useEffect(() => {
     if (!isStaffAuthenticated) {
@@ -56,16 +58,18 @@ export default function StaffScreen() {
   const overduePasses = passRecords.filter((r) => r.status === "overdue");
 
   async function handleMarkOverdue(passNumber: string) {
+    setActionError("");
     const result = await markPassOverdue(passNumber);
     if (!result.ok && result.error) {
-      Alert.alert("Could not mark overdue", result.error);
+      setActionError(result.error);
     }
   }
 
   async function handleMarkReturned(passNumber: string) {
+    setActionError("");
     const result = await returnPass(passNumber);
     if (!result.ok && result.error) {
-      Alert.alert("Could not mark returned", result.error);
+      setActionError(result.error);
     }
   }
 
@@ -77,6 +81,8 @@ export default function StaffScreen() {
   return (
     <Screen scroll>
       <ScreenHeader title="Staff" subtitle="Card overview" onBack={logout} />
+
+      {actionError ? <Banner type="error" message={actionError} /> : null}
 
       <Section title="Currently borrowed" count={borrowedPasses.length} emptyText="No borrowed passes right now.">
         {borrowedPasses.map((record) => (
@@ -109,7 +115,7 @@ export default function StaffScreen() {
         ))}
       </Section>
 
-      <Section title="Returned today" count={returnedPasses.length} emptyText="No returned passes.">
+      <Section title="Returned" count={returnedPasses.length} emptyText="No returned passes.">
         {returnedPasses.map((record) => (
           <Card key={record.id} variant="outlined" style={styles.passCard}>
             <View style={styles.passTop}>

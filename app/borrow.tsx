@@ -6,6 +6,7 @@ import Screen from "@/components/Screen";
 import ScreenHeader from "@/components/ScreenHeader";
 import { usePassContext } from "@/context/PassContext";
 import { SPACING } from "@/lib/theme";
+import { isValidEmail } from "@/lib/validators";
 import { router } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
@@ -28,6 +29,11 @@ export default function BorrowScreen() {
     try {
       if (!name.trim() || !email.trim() || !passNumber.trim()) {
         setError("Please fill in all fields.");
+        return;
+      }
+
+      if (!isValidEmail(email)) {
+        setError("Please enter a valid email address.");
         return;
       }
 
