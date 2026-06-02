@@ -1,11 +1,14 @@
-import { View, Text, StyleSheet } from "react-native";
-import { useState } from "react";
 import AppButton from "@/components/AppButton";
+import Banner from "@/components/Banner";
+import Card from "@/components/Card";
 import FormInput from "@/components/FormInput";
-import { router } from "expo-router";
+import Screen from "@/components/Screen";
+import ScreenHeader from "@/components/ScreenHeader";
 import { usePassContext } from "@/context/PassContext";
-import LoadingIndicator from "@/components/LoadingIndicator";
-import { COLORS } from "@/lib/theme";
+import { SPACING } from "@/lib/theme";
+import { router } from "expo-router";
+import { useState } from "react";
+import { StyleSheet, View } from "react-native";
 
 export default function BorrowScreen() {
   const [name, setName] = useState("");
@@ -49,17 +52,11 @@ export default function BorrowScreen() {
       );
 
       if (studentHasActivePass) {
-        setError(
-          "You already have an active pass. Return it before borrowing another."
-        );
+        setError("You already have an active pass. Return it before borrowing another.");
         return;
       }
 
-      const result = await borrowPass(
-        name.trim(),
-        normalizedEmail,
-        normalizedPass
-      );
+      const result = await borrowPass(name.trim(), normalizedEmail, normalizedPass);
 
       if (!result.ok) {
         setError(
@@ -72,115 +69,66 @@ export default function BorrowScreen() {
       setName("");
       setEmail("");
       setPassNumber("");
-      setSuccessMessage("You have successfully borrowed a pass.");
+      setSuccessMessage("Pass borrowed. Please return it by 6:30 PM.");
     } finally {
       setIsSubmitting(false);
     }
   }
 
   return (
-    <View style={styles.screen}>
-      <View style={styles.card}>
-        <Text style={styles.title}>Borrow Pass</Text>
-        <Text style={styles.subtitle}>New borrower</Text>
+    <Screen scroll>
+      <ScreenHeader
+        title="Borrow a pass"
+        subtitle="New borrower"
+        onBack={() => router.replace("/borrow-options")}
+      />
 
+      <Card>
         <FormInput
-          placeholder="Enter your name"
+          label="Full name"
+          placeholder="e.g. Alex Müller"
           value={name}
           onChangeText={setName}
         />
-
         <FormInput
-          placeholder="Enter your email"
+          label="Email"
+          placeholder="you@example.com"
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
           autoCapitalize="none"
+          autoComplete="email"
         />
-
         <FormInput
-          placeholder="Enter pass number"
+          label="Pass number"
+          placeholder="e.g. 12"
           value={passNumber}
           onChangeText={setPassNumber}
         />
 
-        {isSubmitting ? (
-          <LoadingIndicator message="Borrowing pass..." />
-        ) : error ? (
-          <Text style={styles.errorText}>{error}</Text>
-        ) : successMessage ? (
-          <Text style={styles.successText}>{successMessage}</Text>
-        ) : null}
+        {error ? <Banner type="error" message={error} /> : null}
+        {successMessage ? <Banner type="success" message={successMessage} /> : null}
 
-        <View style={styles.buttonGroup}>
-          <AppButton
-            title={isSubmitting ? "Borrowing..." : "Confirm Borrow"}
-            onPress={handleBorrow}
-            disabled={isSubmitting}
-          />
+        <AppButton
+          title="Confirm borrow"
+          onPress={handleBorrow}
+          loading={isSubmitting}
+          size="lg"
+        />
+      </Card>
 
-          <AppButton
-            title="Back"
-            disabled={isSubmitting}
-            onPress={() => router.replace("/borrow-options")}
-            variant="secondary"
-          />
-
-          <AppButton
-            title="Back to Home"
-            disabled={isSubmitting}
-            onPress={() => router.replace("/")}
-            variant="secondary"
-          />
-        </View>
+      <View style={styles.footer}>
+        <AppButton
+          title="Back to home"
+          variant="ghost"
+          onPress={() => router.replace("/")}
+          disabled={isSubmitting}
+        />
       </View>
-    </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    padding: 24,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: COLORS.background,
-  },
-  card: {
-    width: "100%",
-    maxWidth: 560,
-    backgroundColor: COLORS.surface,
-    borderColor: COLORS.border,
-    borderWidth: 1,
-    borderRadius: 20,
-    padding: 24,
-    gap: 12,
-  },
-  title: {
-    fontSize: 30,
-    fontWeight: "700",
-    textAlign: "center",
-    color: COLORS.textPrimary,
-  },
-  subtitle: {
-    fontSize: 17,
-    textAlign: "center",
-    color: COLORS.textSecondary,
-    marginBottom: 8,
-  },
-  errorText: {
-    color: COLORS.danger,
-    textAlign: "center",
-    fontSize: 14,
-  },
-  successText: {
-    color: COLORS.success,
-    textAlign: "center",
-    fontSize: 14,
-  },
-  buttonGroup: {
-    marginTop: 4,
-    gap: 10,
-    alignItems: "center",
-  },
+  footer: { marginTop: SPACING.xs },
 });

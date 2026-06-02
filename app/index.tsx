@@ -1,71 +1,64 @@
-import AppButton from "@/components/AppButton";
-import { COLORS } from "@/lib/theme";
+import ActionCard from "@/components/ActionCard";
+import Screen from "@/components/Screen";
+import { COLORS, RADII, SPACING, TYPE } from "@/lib/theme";
+import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { View, Text, Button, StyleSheet, Pressable } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 export default function HomeScreen() {
   return (
-    <View style={styles.screen}>
-
-      <Text style={styles.title}>Campus Pass Manager</Text>
-      <Text style={styles.subtitle}>Choose an option</Text>
-
-      <View style={styles.buttonGroup}>
-        <AppButton
-          title="Borrow Pass"
-          onPress={() => router.push("/borrow-options")}
-        />
-
-        <AppButton
-          title="Return Pass"
-          onPress={() => router.push("/return")}
-        />
-
-        <AppButton
-          title="Staff"
-          onPress={() => router.push("/staff-login" as any)}
-        />
+    <Screen scroll>
+      <View style={styles.header}>
+        <View style={styles.logo}>
+          <Ionicons name="card" size={30} color={COLORS.textOnPrimary} />
+        </View>
+        <Text style={styles.brand}>Campus Pass Manager</Text>
+        <Text style={styles.tagline}>Spiced Academy · daily card desk</Text>
       </View>
 
-    </View>
-  )
+      <View style={styles.actions}>
+        <ActionCard
+          icon="albums-outline"
+          title="Borrow a pass"
+          subtitle="Check out a campus card"
+          onPress={() => router.push("/borrow-options")}
+        />
+        <ActionCard
+          icon="arrow-undo-outline"
+          title="Return a pass"
+          subtitle="Check a card back in"
+          tint={COLORS.accent}
+          onPress={() => router.push("/return")}
+        />
+        <ActionCard
+          icon="lock-closed-outline"
+          title="Staff"
+          subtitle="Dashboard & history"
+          tint={COLORS.textSecondary}
+          onPress={() => router.push("/staff-login")}
+        />
+      </View>
+    </Screen>
+  );
 }
 
-
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
+  header: {
+    alignItems: "center",
+    gap: SPACING.sm,
+    marginTop: SPACING.xl,
+    marginBottom: SPACING.lg,
+  },
+  logo: {
+    width: 72,
+    height: 72,
+    borderRadius: RADII.xl,
+    backgroundColor: COLORS.primary,
+    alignItems: "center",
     justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
-    backgroundColor: COLORS.background,
+    marginBottom: SPACING.sm,
   },
-  card: {
-    width: "100%",
-    maxWidth: 560,
-    backgroundColor: COLORS.surface,
-    borderColor: COLORS.border,
-    borderWidth: 1,
-    borderRadius: 20,
-    padding: 24,
-    gap: 14,
-  },
-  title: {
-    fontSize: 30,
-    fontWeight: "700",
-    color: COLORS.textPrimary,
-    textAlign: "center",
-  },
-  subtitle: {
-    fontSize: 17,
-    color: COLORS.textSecondary,
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  buttonGroup: {
-    marginTop: 24,
-    gap: 12,
-    alignItems: "center",
-    width: "100%",
-  },
+  brand: { ...TYPE.display, color: COLORS.textPrimary, textAlign: "center" },
+  tagline: { ...TYPE.caption, color: COLORS.textSecondary, textAlign: "center" },
+  actions: { gap: SPACING.md },
 });

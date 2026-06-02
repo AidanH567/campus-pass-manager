@@ -1,69 +1,38 @@
-import { View, Text, StyleSheet } from "react-native";
+import ActionCard from "@/components/ActionCard";
+import Screen from "@/components/Screen";
+import ScreenHeader from "@/components/ScreenHeader";
+import { COLORS, SPACING } from "@/lib/theme";
 import { router } from "expo-router";
-import AppButton from "@/components/AppButton";
-import { COLORS } from "@/lib/theme";
+import { StyleSheet, View } from "react-native";
 
 export default function BorrowOptionsScreen() {
   return (
-    <View style={styles.screen}>
-      <View style={styles.card}>
-        <Text style={styles.title}>Borrow Pass</Text>
-        <Text style={styles.subtitle}>Choose an option</Text>
+    <Screen scroll>
+      <ScreenHeader
+        title="Borrow a pass"
+        subtitle="First time, or have you borrowed before?"
+        onBack={() => router.replace("/")}
+      />
 
-        <View style={styles.buttonGroup}>
-          <AppButton
-            title="First-time borrower"
-            onPress={() => router.push("/borrow")}
-          />
-
-          <AppButton
-            title="Returning borrower"
-            onPress={() => router.push("/borrow-existing")}
-          />
-
-          <AppButton
-            title="Back to Home"
-            onPress={() => router.replace("/")}
-            variant="secondary"
-          />
-        </View>
+      <View style={styles.actions}>
+        <ActionCard
+          icon="person-add-outline"
+          title="First-time borrower"
+          subtitle="Enter your name, email and pass"
+          onPress={() => router.push("/borrow")}
+        />
+        <ActionCard
+          icon="repeat-outline"
+          title="Returning borrower"
+          subtitle="Look you up by email"
+          tint={COLORS.accent}
+          onPress={() => router.push("/borrow-existing")}
+        />
       </View>
-    </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
-  },
-  card: {
-    width: "100%",
-    maxWidth: 560,
-    backgroundColor: COLORS.surface,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 20,
-    padding: 24,
-    gap: 14,
-  },
-  title: {
-    fontSize: 30,
-    fontWeight: "700",
-    color: COLORS.textPrimary,
-    textAlign: "center",
-  },
-  subtitle: {
-    fontSize: 17,
-    color: COLORS.textSecondary,
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  buttonGroup: {
-    gap: 12,
-    alignItems: "center",
-  },
+  actions: { gap: SPACING.md, marginTop: SPACING.sm },
 });
