@@ -41,3 +41,9 @@ from information_schema.column_privileges
 where table_schema = 'public' and table_name = 'pass_records'
   and grantee = 'anon' and column_name = 'email'
 order by privilege_type;
+
+-- 4) Data integrity: at most one un-returned (active) row per pass number, so
+--    two simultaneous borrows of the same pass can't both succeed.
+create unique index if not exists pass_records_one_active_per_number
+  on public.pass_records (pass_number)
+  where returned_at is null;

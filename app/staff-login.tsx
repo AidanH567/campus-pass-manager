@@ -1,28 +1,29 @@
 import Screen from "@/components/Screen";
 import { useStaffAuthContext } from "@/context/StaffAuthContext";
+import { verifyStaffPasscode } from "@/lib/staffApi";
 import { COLORS, FONTS, RADII, SPACING, TYPE } from "@/lib/theme";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-
-const STAFF_PASSCODE = "7842";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 
 export default function StaffLoginScreen() {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
+  const [checking, setChecking] = useState(false);
 
   const { authenticateStaff } = useStaffAuthContext();
 
   function handleNumberPress(number: string) {
-    if (code.length >= 4) return;
+    if (code.length >= 4 || checking) return;
     Haptics.selectionAsync().catch(() => {});
     setError("");
     setCode((current) => current + number);
   }
 
   function handleDelete() {
+    if (checking) return;
     Haptics.selectionAsync().catch(() => {});
     setCode((current) => current.slice(0, -1));
     setError("");
@@ -34,16 +35,30 @@ export default function StaffLoginScreen() {
   }
 
   useEffect(() => {
-    if (code.length === 4) {
-      if (code === STAFF_PASSCODE) {
+    if (code.length !== 4) return;
+
+    let active = true;
+    setChecking(true);
+    setError("");
+
+    verifyStaffPasscode(code).then(({ ok, error: rpcError }) => {
+      if (!active) return;
+      setChecking(false);
+      if (ok) {
         authenticateStaff();
         router.replace("/staff");
       } else {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
-        setError("Incorrect passcode. Try again.");
+        setError(
+          rpcError ? "Couldn't verify — check your connection." : "Incorrect passcode. Try again."
+        );
         setCode("");
       }
-    }
+    });
+
+    return () => {
+      active = false;
+    };
   }, [authenticateStaff, code]);
 
   const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
@@ -80,7 +95,14 @@ export default function StaffLoginScreen() {
           ))}
         </View>
 
-        <Text style={[styles.error, error ? null : styles.errorHidden]}>{error || " "}</Text>
+        {checking ? (
+          <View style={styles.statusRow}>
+            <ActivityIndicator size="small" color={COLORS.primary} />
+            <Text style={styles.checking}>Checking…</Text>
+          </View>
+        ) : (
+          <Text style={[styles.error, error ? null : styles.errorHidden]}>{error || " "}</Text>
+        )}
 
         <View style={styles.keypad}>
           {keys.map((n) => (
@@ -151,6 +173,8 @@ const styles = StyleSheet.create({
   dotError: { borderColor: COLORS.danger },
   error: { ...TYPE.caption, color: COLORS.danger, textAlign: "center", minHeight: 18 },
   errorHidden: { opacity: 0 },
+  statusRow: { flexDirection: "row", alignItems: "center", gap: SPACING.sm, minHeight: 18 },
+  checking: { ...TYPE.caption, color: COLORS.textSecondary },
   keypad: {
     width: 264,
     flexDirection: "row",
